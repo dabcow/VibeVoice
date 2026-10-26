@@ -1,6 +1,8 @@
 """Parameter schema and built-in voice profiles."""
 
 # key, label, min, max, resolution, unit, group
+# Share codes refer to parameters by position: only ever append new ones,
+# and never change an existing min or resolution.
 PARAMS = [
     ("pitch", "Pitch", -12, 12, 0.5, "st", "Pitch"),
     ("target_f0", "Auto pitch target", 0, 400, 5, "Hz", "Pitch"),

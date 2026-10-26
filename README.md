@@ -41,6 +41,10 @@ Windows SmartScreen may warn about an unsigned app the first time. Click
 - **Hear Myself**: live monitoring through your headphones.
 - **Customize**: 26 controls. Use *Save as new* to keep your own voices. Edits
   to custom voices save automatically.
+- **Share voices with a code**: click *Share* to copy a short code for the
+  current voice, such as `VV1-69YK7sSXEpbBuJbcpo3UuNhJJtMaeWXEv5E1uiU`. A
+  friend clicks *Import code* and pastes it to get the exact same voice. Codes
+  are safe to paste in Discord, and a checksum catches typos.
 - **Global hotkeys** that work while you're in a game:
   `Ctrl+Alt+1..9` switch voice, `Ctrl+Alt+0` turns the effect on/off,
   `Ctrl+Alt+M` mutes.
@@ -86,6 +90,7 @@ main.py               entry point
 build.py              builds dist/VibeVoice.exe with PyInstaller
 vibevoice/dsp.py      effects: pitch shifters, phase vocoder, reverb, echo, EQ, ...
 vibevoice/profiles.py parameter schema + built-in voices
+vibevoice/sharecode.py voice <-> share code (packed, CRC-checked, base58)
 vibevoice/engine.py   audio I/O: mic -> effects -> virtual cable / monitor
 vibevoice/hotkeys.py  global hotkeys (Win32 RegisterHotKey)
 vibevoice/app.py      GUI

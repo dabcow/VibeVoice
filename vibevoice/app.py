@@ -10,6 +10,7 @@ import webbrowser
 from tkinter import messagebox, simpledialog, ttk
 
 from . import engine as eng
+from . import sharecode
 from .hotkeys import MOD_ALT, MOD_CONTROL, GlobalHotkeys
 from .profiles import BUILTIN, DEFAULTS, PARAMS
 
@@ -245,7 +246,8 @@ class VibeVoiceApp:
         top = tk.Frame(left, bg=PANEL)
         top.pack(fill="x", pady=(0, 8))
         self._label(top, "Voices", 13, True).pack(side="left")
-        self._label(top, "Ctrl+Alt+1-9 switches from any app", 9, fg=MUTED).pack(side="right")
+        flat_button(top, "⬇  Import code", self._import_code, bg=CARD_HI).pack(side="right")
+        self._label(top, "Ctrl+Alt+1-9 from any app", 9, fg=MUTED).pack(side="right", padx=10)
         self.voice_scroll = ScrollFrame(left)
         self.voice_scroll.pack(fill="both", expand=True)
         for c in range(3):
@@ -293,6 +295,8 @@ class VibeVoiceApp:
         for text, cmd in (("Delete", self._delete_profile), ("Reset", self._reset_profile),
                           ("Save as new", self._save_as)):
             flat_button(top, text, cmd, bg=CARD_HI).pack(side="right", padx=(6, 0))
+        flat_button(top, "⬆  Share", self._share_profile, bg=ACCENT, fg="white").pack(
+            side="right", padx=(6, 0))
         sf = ScrollFrame(parent, bg=CARD)
         sf.pack(fill="both", expand=True, padx=(12, 0), pady=(0, 10))
         inner = sf.inner
@@ -478,6 +482,93 @@ class VibeVoiceApp:
                 return
             p["params"] = copy.deepcopy(builtin["params"])
         self._select(self.current)
+
+    # ---- share codes ---------------------------------------------------------------
+    def _code_dialog(self, title, message, code=None):
+        """Dark modal with a code field. Returns the entered text on OK (import mode)."""
+        dlg = tk.Toplevel(self.root, bg=PANEL, padx=18, pady=16)
+        dlg.title(title)
+        dlg.transient(self.root)
+        dlg.resizable(False, False)
+        self._label(dlg, title, 12, True).pack(anchor="w")
+        self._label(dlg, message, 9, fg=MUTED, justify="left", wraplength=460).pack(
+            anchor="w", pady=(2, 10))
+        var = tk.StringVar(value=code or "")
+        entry = tk.Entry(dlg, textvariable=var, width=58, font=("Consolas", 11), bg=CARD,
+                         fg=TEXT, insertbackground=TEXT, relief="flat",
+                         highlightthickness=1, highlightbackground=CARD_HI,
+                         highlightcolor=ACCENT)
+        entry.pack(fill="x", ipady=6)
+        status = self._label(dlg, "", 9, fg=OK)
+        status.pack(anchor="w", pady=(6, 0))
+        row = tk.Frame(dlg, bg=PANEL)
+        row.pack(fill="x", pady=(10, 0))
+        result = {}
+
+        def copy():
+            self.root.clipboard_clear()
+            self.root.clipboard_append(var.get())
+            status.configure(text="✓ Copied to clipboard", fg=OK)
+
+        def ok():
+            result["code"] = var.get()
+            dlg.destroy()
+
+        if code is not None:  # share mode
+            entry.configure(state="readonly", readonlybackground=CARD)
+            flat_button(row, "Close", dlg.destroy, bg=CARD_HI).pack(side="right")
+            flat_button(row, "Copy code", copy, bg=ACCENT, fg="white").pack(side="right", padx=6)
+            copy()
+        else:
+            flat_button(row, "Cancel", dlg.destroy, bg=CARD_HI).pack(side="right")
+            flat_button(row, "Add voice", ok, bg=ACCENT, fg="white").pack(side="right", padx=6)
+            entry.bind("<Return>", lambda e: ok())
+            try:  # pre-fill when the clipboard already holds a code
+                clip = self.root.clipboard_get().strip()
+                if clip.upper().startswith(sharecode.PREFIX.upper()):
+                    var.set(clip)
+            except tk.TclError:
+                pass
+        entry.bind("<Escape>", lambda e: dlg.destroy())
+        entry.focus_set()
+        entry.select_range(0, "end")
+        dlg.geometry(f"+{self.root.winfo_rootx() + 120}+{self.root.winfo_rooty() + 120}")
+        try:  # modal; grabbing needs the window to be on screen first
+            dlg.wait_visibility()
+            dlg.grab_set()
+        except tk.TclError:
+            pass
+        self.root.wait_window(dlg)
+        return result.get("code")
+
+    def _share_profile(self):
+        p = self.profiles[self.current]
+        code = sharecode.encode(p["name"], p["color"], self.work)
+        self._code_dialog(f"Share “{p['name']}”",
+                          "Send this code to a friend. They can click Import code in VibeVoice "
+                          "and paste it to get this exact voice, including any unsaved slider "
+                          "changes.", code)
+
+    def _import_code(self):
+        text = self._code_dialog("Import a voice",
+                                 "Paste a voice code someone shared with you (it starts "
+                                 "with VV1-).")
+        if not text:
+            return
+        try:
+            shared = sharecode.decode(text)
+        except ValueError as ex:
+            messagebox.showerror(APP, str(ex))
+            return
+        name, n = shared["name"], 2
+        while any(p["name"].lower() == name.lower() for p in self.profiles):
+            name = f"{shared['name']} ({n})"
+            n += 1
+        self.custom.append({"name": name, "color": shared["color"],
+                            "params": shared["params"], "builtin": False})
+        self._rebuild_profiles()
+        self._select(self._profile_index(name))
+        self._save_cfg()
 
     def _delete_profile(self):
         p = self.profiles[self.current]
