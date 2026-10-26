@@ -67,3 +67,7 @@ vibevoice/engine.py   audio I/O: mic -> effects -> virtual cable / monitor
 vibevoice/hotkeys.py  global hotkeys (Win32 RegisterHotKey)
 vibevoice/app.py      GUI
 ```
+
+## License
+
+[MIT](LICENSE): free to use, modify and share.
