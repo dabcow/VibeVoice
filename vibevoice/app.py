@@ -3,6 +3,7 @@ import copy
 import json
 import math
 import os
+import sys
 import threading
 import tkinter as tk
 import webbrowser
@@ -16,6 +17,9 @@ APP = "VibeVoice"
 CFG_DIR = os.path.join(os.environ.get("APPDATA", os.path.expanduser("~")), APP)
 CFG_FILE = os.path.join(CFG_DIR, "settings.json")
 VBCABLE_URL = "https://vb-audio.com/Cable/"
+# bundled files live next to the package, or in PyInstaller's unpack dir
+ASSETS = os.path.join(getattr(sys, "_MEIPASS", os.path.dirname(os.path.dirname(
+    os.path.abspath(__file__)))), "assets")
 NONE = "(none)"
 LATENCIES = {"Low (256)": 256, "Balanced (512)": 512, "Safe (1024)": 1024}
 TEST_SECONDS = 5
@@ -119,6 +123,10 @@ class VibeVoiceApp:
         self.in_devs, self.out_devs = [], []
 
         root.title(APP)
+        try:
+            root.iconbitmap(default=os.path.join(ASSETS, "icon.ico"))
+        except tk.TclError:
+            pass
         root.configure(bg=BG)
         root.geometry(self.cfg.get("geometry", "1180x760"))
         root.minsize(980, 640)
@@ -422,11 +430,13 @@ class VibeVoiceApp:
         self._suspend_sliders = True
         for key, (var, val, unit, res) in self.sliders.items():
             var.set(self.work[key])
-            val.configure(text=self._fmt(self.work[key], unit, res))
+            val.configure(text=self._fmt(self.work[key], unit, res, key))
         self._suspend_sliders = False
 
     @staticmethod
-    def _fmt(v, unit, res):
+    def _fmt(v, unit, res, key=""):
+        if key == "target_f0" and v <= 0:
+            return "off"
         s = f"{v:+.1f}" if unit in ("st", "dB") else (f"{v:.0f}" if res >= 1 else f"{v:.2f}")
         return f"{s} {unit}".strip()
 
@@ -435,7 +445,7 @@ class VibeVoiceApp:
             return
         var, val, unit, res = self.sliders[key]
         self.work[key] = round(var.get(), 4)
-        val.configure(text=self._fmt(self.work[key], unit, res))
+        val.configure(text=self._fmt(self.work[key], unit, res, key))
         self.engine.set_params(self.work)
         p = self.profiles[self.current]
         if not p.get("builtin"):  # custom profiles save edits automatically
@@ -633,10 +643,17 @@ class VibeVoiceApp:
             lat = (e.in_stream.latency or 0) + 2 * e.blocksize / eng.SR
             if e.cable_stream is not None:
                 lat += e.cable_stream.latency or 0
+            sv = e.chain.spectral
+            if sv.active:
+                lat += sv.N / eng.SR
             out = self.cable_var.get() if e.cable_stream is not None else "no virtual mic"
+            heard = ""
+            if self.work.get("target_f0", 0) > 0:
+                heard = (f"   your pitch ~{sv.user_f0:.0f} Hz" if sv.user_f0
+                         else "   learning your pitch… keep talking")
             self.status.configure(
                 text=f"● Running   DSP load {e.load * 100:4.1f}%   "
-                     f"latency ~{lat * 1000:.0f} ms   output → {out}"
+                     f"latency ~{lat * 1000:.0f} ms   output → {out}" + heard
                      + (f"   glitches {e.xruns}" if e.xruns else ""), fg=OK)
         else:
             self.status.configure(text="● Stopped — check the microphone in Setup", fg=BAD)
@@ -651,9 +668,11 @@ class VibeVoiceApp:
 
 
 def main():
-    try:  # crisp text on high-DPI screens
+    try:
         import ctypes
-        ctypes.windll.shcore.SetProcessDpiAwareness(1)
+        ctypes.windll.shcore.SetProcessDpiAwareness(1)  # crisp text on high-DPI screens
+        # own taskbar identity, so Windows shows our icon instead of Python's
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("VibeVoice.App")
     except (AttributeError, OSError):
         pass
     root = tk.Tk()

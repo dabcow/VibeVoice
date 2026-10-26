@@ -265,6 +265,9 @@ class AudioEngine:
     def render(self, raw, params):
         """Process a recorded clip offline with a fresh chain."""
         c = VoiceChain(SR)
+        live = self.chain.spectral
+        if live.user_f0:  # reuse the pitch already learned from the live mic
+            c.spectral.avg_lf0, c.spectral.f0_count = live.avg_lf0, live.f0_count
         c.configure(params)
         c.set_gate(self.gate_db)
         out = np.empty_like(raw)

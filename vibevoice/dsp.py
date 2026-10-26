@@ -2,12 +2,11 @@
 
 Every effect works on mono float32 blocks and keeps its own state, so the
 chain can be fed arbitrary block sizes. All per-sample work is vectorised
-with numpy / scipy; there are no Python-level per-sample loops.
+with numpy; there are no Python-level per-sample loops.
 """
 import math
 
 import numpy as np
-from scipy.signal import lfilter, sosfilt
 
 F32 = np.float32
 
@@ -50,11 +49,12 @@ class FeedbackDelay:
 
     Works for delays shorter than the block by processing in sub-chunks of
     at most `delay` samples (each chunk then only depends on the past).
+    The damping lowpass is a 2-tap FIR, so it stays vectorised.
     """
 
     def __init__(self, max_delay):
         self.ring = _Ring(max_delay + 1)
-        self.lp_zi = np.zeros(1, F32)
+        self.last = 0.0
 
     def process(self, x, delay, fb, damp=0.0):
         delay = max(1, min(int(delay), self.ring.size - 1))
@@ -70,15 +70,16 @@ class FeedbackDelay:
     def _chunk(self, x, delay, fb, damp):
         d = self.ring.read_behind(delay, len(x))
         if damp > 0.0:
-            lp, self.lp_zi = lfilter([1.0 - damp], [1.0, -damp], d, zi=self.lp_zi)
-            self.ring.write(x + fb * lp)
+            prev = np.concatenate(([self.last], d[:-1]))
+            self.last = float(d[-1])
+            self.ring.write(x + fb * ((1.0 - damp) * d + damp * prev))
         else:
             self.ring.write(x + fb * d)
         return d
 
     def clear(self):
         self.ring.clear()
-        self.lp_zi[:] = 0
+        self.last = 0.0
 
 
 # --------------------------------------------------------------------------
@@ -274,21 +275,26 @@ class Vibrato:
 
 
 class SpectralVoice:
-    """STFT stage: formant shift, monotone robot (vocoder) and breathiness.
+    """STFT stage: pitch + formant shifting, monotone robot and breathiness.
 
-    Spectral envelope comes from a liftered cepstrum. Formants are moved by
-    warping that envelope; the robot replaces the voice's own excitation with
-    a band-limited pulse train at a fixed pitch; breath swaps in noise.
-    Adds one frame (N samples, ~21 ms) of latency, only while active.
+    Pitch uses a phase-locked phase vocoder (Laroche & Dolson): spectral peaks
+    are moved to their new frequency with coherent phase, after the voice is
+    flattened by its cepstral envelope. The envelope is then re-applied at the
+    formant position asked for, so pitch and timbre move independently.
+    With `target_f0` set, a pitch tracker learns the speaker's average pitch and
+    shifts that average to the target, keeping natural intonation.
+    Adds one frame (N samples, ~43 ms) of latency, only while active.
     """
 
-    N, HOP, LIFTER = 1024, 256, 90
+    N, HOP, LIFTER = 2048, 256, 180
+    DEFAULT_F0 = 120.0
 
     def __init__(self, sr):
         self.sr = sr
         n, hop = self.N, self.HOP
+        nb = n // 2 + 1
         self.win = np.sqrt(0.5 - 0.5 * np.cos(2 * np.pi * np.arange(n) / n))
-        self.ola_scale = hop / (n * 0.5)  # periodic Hann at 75 % overlap sums to 2
+        self.ola_scale = hop / (n * 0.5)  # periodic Hann (win^2) sums to n / (2 * hop)
         self.frame = np.zeros(n)
         self.ola = np.zeros(n)
         self.inq = np.zeros(0, F32)
@@ -297,21 +303,33 @@ class SpectralVoice:
         lift[0] = 1.0
         lift[1:self.LIFTER] = 2.0  # fold negative quefrencies onto positive
         self.lifter = lift
-        self.bins = np.arange(n // 2 + 1, dtype=np.float64)
+        self.bins = np.arange(nb, dtype=np.float64)
+        self.ibins = np.arange(nb)
+        self.omega = 2 * np.pi * self.bins / n
+        self.prev_ph = np.zeros(nb)
+        self.acc = np.zeros(nb)
         self.rng = np.random.default_rng()
-        # carrier
+        # pitch tracker (autocorrelation of the analysis frame)
+        self.wac = np.fft.irfft(np.abs(np.fft.rfft(self.win)) ** 2, n)
+        self.lag_lo, self.lag_hi = sr // 450, sr // 65
+        self.avg_lf0 = math.log2(self.DEFAULT_F0)
+        self.f0_count = 0
+        # robot carrier
         self.car_frame = np.zeros(n)
         self.car_phase = 0.0
         self.car_f0 = None
         self.table = None
         # params
-        self.alpha = 1.0
+        self.pv = False
+        self.pitch_st = self.formant_st = 0.0
+        self.target_f0 = 0.0
         self.robot = 0.0
         self.robot_f0 = 120.0
         self.breath = 0.0
 
-    def configure(self, formant_st, robot, robot_f0, breath):
-        self.alpha = 2 ** (formant_st / 12)
+    def configure(self, pv, pitch_st, formant_st, target_f0, robot, robot_f0, breath):
+        self.pv = pv
+        self.pitch_st, self.formant_st, self.target_f0 = pitch_st, formant_st, target_f0
         self.robot, self.breath = robot, breath
         self.robot_f0 = robot_f0
         if robot > 0 and self.car_f0 != robot_f0:
@@ -325,7 +343,12 @@ class SpectralVoice:
 
     @property
     def active(self):
-        return abs(self.alpha - 1.0) > 1e-3 or self.robot > 0.001 or self.breath > 0.001
+        return self.pv or self.robot > 0.001 or self.breath > 0.001
+
+    @property
+    def user_f0(self):
+        """Learned average speaking pitch in Hz (None until enough voiced audio)."""
+        return 2 ** self.avg_lf0 if self.f0_count > 20 else None
 
     def process(self, x):
         self.inq = np.concatenate((self.inq, x))
@@ -347,6 +370,36 @@ class SpectralVoice:
         f = pos - i
         return self.table[i] * (1.0 - f) + self.table[i + 1] * f
 
+    def _track_pitch(self, power):
+        ac = np.fft.irfft(power, self.N)
+        if ac[0] < 1e-6 * self.wac[0]:  # too quiet to judge
+            return
+        r = (ac[:self.lag_hi] / self.wac[:self.lag_hi]) * (self.wac[0] / ac[0])
+        seg = r[self.lag_lo:self.lag_hi]
+        top = float(seg.max())
+        if top < 0.6:  # unvoiced
+            return
+        i = int(np.flatnonzero(seg >= 0.85 * top)[0])  # shortest strong lag: no octave-down errors
+        while i + 1 < len(seg) and seg[i + 1] > seg[i]:
+            i += 1
+        lf0 = math.log2(self.sr / (self.lag_lo + i))
+        if self.f0_count > 20 and abs(lf0 - self.avg_lf0) > 0.9:
+            return  # outlier (likely an octave error)
+        self.f0_count += 1
+        alpha = max(1.0 / self.f0_count, self.HOP / (self.sr * 3.0))
+        self.avg_lf0 += (lf0 - self.avg_lf0) * alpha
+
+    def _shift_amounts(self):
+        """(pitch ratio, formant ratio) for this hop."""
+        if self.target_f0 > 0:
+            auto = 12 * (math.log2(self.target_f0) - self.avg_lf0)
+            nominal = 12 * math.log2(self.target_f0 / self.DEFAULT_F0)
+            # a speaker already near the target needs less timbre change
+            scale = min(1.0, max(0.0, auto / nominal)) if abs(nominal) > 0.5 else 1.0
+            st = min(19.0, max(-12.0, auto + self.pitch_st))
+            return 2 ** (st / 12), 2 ** (self.formant_st * scale / 12)
+        return 2 ** (self.pitch_st / 12), 2 ** (self.formant_st / 12)
+
     def _hop(self, chunk):
         n, hop = self.N, self.HOP
         self.frame[:-hop] = self.frame[hop:]
@@ -354,14 +407,27 @@ class SpectralVoice:
         X = np.fft.rfft(self.frame * self.win)
         mag = np.abs(X) + 1e-9
         env = np.fft.rfft(np.fft.irfft(np.log(mag), n) * self.lifter).real
-        if abs(self.alpha - 1.0) > 1e-3:
-            env_w = np.interp(self.bins / self.alpha, self.bins, env)
-            S = X * np.exp(np.clip(env_w - env, -4.0, 4.0))
-        else:
-            env_w, S = env, X
+        env_t, S = env, X
+        if self.pv:
+            ph = np.angle(X)
+            dphi = ph - self.prev_ph - self.omega * hop
+            self.prev_ph = ph
+            inst = self.omega + (np.mod(dphi + np.pi, 2 * np.pi) - np.pi) / hop
+            if self.target_f0 > 0:
+                self._track_pitch(mag * mag)
+            beta, alpha = self._shift_amounts()
+            if abs(alpha - 1.0) > 1e-3:
+                env_t = np.interp(self.bins / alpha, self.bins, env)
+            if abs(beta - 1.0) > 1e-3:
+                self.acc = np.mod(self.acc + hop * beta * inst, 2 * np.pi)
+                S = self._transpose(mag, ph, env, env_t, beta)
+            else:
+                self.acc = ph
+                if env_t is not env:
+                    S = X * np.exp(np.clip(env_t - env, -4.0, 4.0))
         energy = float(np.sum(np.abs(S) ** 2))
         if self.robot > 0.001 or self.breath > 0.001:
-            shape = np.exp(env_w - env_w.max())
+            shape = np.exp(env_t - env_t.max())
             if self.robot > 0.001:
                 self.car_frame[:-hop] = self.car_frame[hop:]
                 self.car_frame[-hop:] = self._carrier(hop)
@@ -378,6 +444,23 @@ class SpectralVoice:
         self.ola[:-hop] = self.ola[hop:]
         self.ola[-hop:] = 0.0
         return out
+
+    def _transpose(self, mag, ph, env, env_t, beta):
+        """Phase-locked bin shifting of the flattened (envelope-free) spectrum."""
+        nb = len(mag)
+        m = mag[1:-1]
+        pk = np.flatnonzero((m > mag[:-2]) & (m >= mag[2:]) & (m > mag.max() * 1e-3)) + 1
+        if len(pk) == 0:
+            return np.zeros(nb, complex)
+        region = np.searchsorted((pk[:-1] + pk[1:]) // 2, self.ibins, side="right")
+        shift = np.rint(pk * beta).astype(np.int64) - pk
+        theta = self.acc[pk] - ph[pk]
+        dst = self.ibins + shift[region]
+        ok = (dst >= 0) & (dst < nb)
+        vals = (mag / np.exp(env)) * np.exp(1j * (ph + theta[region]))
+        S = np.zeros(nb, complex)
+        S[dst[ok]] = vals[ok]
+        return S * np.exp(env_t)
 
 
 class Limiter:
@@ -396,7 +479,7 @@ class Limiter:
 
 
 # --------------------------------------------------------------------------
-# EQ (RBJ biquads -> one scipy SOS cascade)
+# EQ (RBJ biquad magnitudes -> one minimum-phase FIR, FFT convolution)
 # --------------------------------------------------------------------------
 def _biquad(kind, f0, sr, gain_db=0.0, q=0.7071):
     w0 = 2 * math.pi * min(f0, sr * 0.45) / sr
@@ -425,10 +508,20 @@ def _biquad(kind, f0, sr, gain_db=0.0, q=0.7071):
 
 
 class EQ:
+    """The combined response of all bands, realised as one minimum-phase FIR.
+
+    Minimum phase keeps the delay near zero like the IIR filters it replaces,
+    and a single FFT convolution per block is cheaper than several biquads.
+    """
+
+    TAPS, DESIGN = 2048, 16384
+
     def __init__(self, sr):
         self.sr = sr
-        self.sos = None
-        self.zi = None
+        self.h = None
+        self.tail = np.zeros(self.TAPS - 1)
+        self._nfft = 0
+        self._hf = None
 
     def configure(self, low_cut, high_cut, bass, treble):
         secs = []
@@ -441,18 +534,36 @@ class EQ:
         if abs(treble) > 0.1:
             secs.append(_biquad("hs", 3500, self.sr, treble))
         if not secs:
-            self.sos = self.zi = None
+            self.h = None
             return
-        sos = np.array(secs, dtype=np.float64)
-        if self.zi is None or self.zi.shape[0] != len(secs):
-            self.zi = np.zeros((len(secs), 2))
-        self.sos = sos
+        nd = self.DESIGN
+        z1 = np.exp(-1j * np.linspace(0, np.pi, nd // 2 + 1))
+        z2 = z1 * z1
+        mag = np.ones(len(z1))
+        for b0, b1, b2, _, a1, a2 in secs:
+            mag *= np.abs((b0 + b1 * z1 + b2 * z2) / (1 + a1 * z1 + a2 * z2))
+        # minimum phase from magnitude (homomorphic / folded cepstrum)
+        c = np.fft.irfft(np.log(np.maximum(mag, 1e-5)), nd)
+        c[1:nd // 2] *= 2
+        c[nd // 2 + 1:] = 0
+        h = np.fft.irfft(np.exp(np.fft.rfft(c)), nd)[:self.TAPS]
+        fade = 256
+        h[-fade:] *= 0.5 + 0.5 * np.cos(np.linspace(0, np.pi, fade))
+        self.h = h
+        self._nfft = 0
 
     def process(self, x):
-        if self.sos is None:
+        if self.h is None:
             return x
-        y, self.zi = sosfilt(self.sos, x, zi=self.zi)
-        return y.astype(F32)
+        n, L = len(x), self.TAPS
+        nfft = 1 << (n + L - 2).bit_length()
+        if nfft != self._nfft:
+            self._hf = np.fft.rfft(self.h, nfft)
+            self._nfft = nfft
+        y = np.fft.irfft(np.fft.rfft(x, nfft) * self._hf, nfft)[:n + L - 1]
+        y[:L - 1] += self.tail
+        self.tail = y[n:].copy()
+        return y[:n].astype(F32)
 
 
 # --------------------------------------------------------------------------
@@ -477,14 +588,19 @@ class VoiceChain:
         self.limiter = Limiter()
         self.p = {}
         self.gain = 1.0
+        self.delay_pitch = False
 
     def configure(self, p):
         self.p = dict(p)
         pitch = p.get("pitch", 0)
+        formant = p.get("formant", pitch)
+        target = p.get("target_f0", 0)
+        # cheap delay-line shifter when formants simply follow pitch; otherwise
+        # the phase vocoder moves pitch and formants independently
+        pv = target > 0 or abs(formant - pitch) > 0.05
         self.pitch.ratio = 2 ** (pitch / 12)
-        # the delay-line shifter moves formants along with pitch; correct the rest
-        shifted = pitch if abs(pitch) > 0.05 else 0.0
-        self.spectral.configure(p.get("formant", pitch) - shifted, p.get("robot_mix", 0),
+        self.delay_pitch = not pv and abs(pitch) > 0.05
+        self.spectral.configure(pv, pitch, formant, target, p.get("robot_mix", 0),
                                 p.get("robot_pitch", 120), p.get("breath", 0))
         self.eq.configure(p.get("low_cut", 0), p.get("high_cut", 20000),
                           p.get("bass", 0), p.get("treble", 0))
@@ -496,7 +612,7 @@ class VoiceChain:
     def process(self, x):
         p = self.p
         x = self.gate.process(x)
-        if abs(p.get("pitch", 0)) > 0.05:
+        if self.delay_pitch:
             x = self.pitch.process(x)
         if self.spectral.active:
             x = self.spectral.process(x)

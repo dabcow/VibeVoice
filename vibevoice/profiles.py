@@ -3,6 +3,7 @@
 # key, label, min, max, resolution, unit, group
 PARAMS = [
     ("pitch", "Pitch", -12, 12, 0.5, "st", "Pitch"),
+    ("target_f0", "Auto pitch target", 0, 400, 5, "Hz", "Pitch"),
     ("formant", "Formant (timbre)", -12, 12, 0.5, "st", "Pitch"),
     ("tremble", "Tremble (shaky)", 0, 1, 0.01, "", "Pitch"),
     ("robot_mix", "Monotone robot", 0, 1, 0.01, "", "Character"),
@@ -30,7 +31,7 @@ PARAMS = [
 ]
 
 DEFAULTS = {
-    "pitch": 0, "formant": 0, "tremble": 0, "robot_mix": 0, "robot_pitch": 120,
+    "pitch": 0, "target_f0": 0, "formant": 0, "tremble": 0, "robot_mix": 0, "robot_pitch": 120,
     "breath": 0, "ring_mix": 0, "ring_freq": 50, "drive": 0, "crush_bits": 16,
     "crush_down": 1, "chorus_mix": 0, "chorus_rate": 0.8, "chorus_delay": 12,
     "chorus_depth": 2, "echo_mix": 0, "echo_time": 250, "echo_fb": 0.35,
@@ -49,12 +50,16 @@ def make(name, color, **kw):
 
 BUILTIN = [
     make("Clean", "#6b7280"),
-    make("Girl", "#f472b6", pitch=7, formant=3.5, low_cut=170, treble=2.5, bass=-3, gain=2),
-    make("Woman", "#ec4899", pitch=5, formant=2.5, low_cut=130, treble=1.5, bass=-2, gain=1.5),
+    # female voices: learn the speaker's average pitch and move it to a target,
+    # formants up ~19 % (woman) / ~30 % (girl), softer chest, a little air
+    make("Girl", "#f472b6", target_f0=270, formant=4.5, breath=0.1, low_cut=170,
+         bass=-4, treble=3, gain=6),
+    make("Woman", "#ec4899", target_f0=210, formant=3, breath=0.08, low_cut=120,
+         bass=-3, treble=2, gain=4.5),
     make("Old Man", "#a8a29e", pitch=-2, formant=-1, tremble=0.6, breath=0.22,
          low_cut=160, high_cut=6500, drive=0.04, treble=-1, gain=6),
     make("Robot", "#10b981", robot_mix=1.0, robot_pitch=115, chorus_mix=0.3,
-         chorus_rate=0.1, chorus_delay=2.5, chorus_depth=0.05, treble=2, low_cut=90),
+         chorus_rate=0.1, chorus_delay=2.5, chorus_depth=0.05, treble=2, low_cut=90, gain=2),
     make("Mega Echo", "#6366f1", echo_mix=0.85, echo_time=320, echo_fb=0.78,
          reverb_mix=0.25, reverb_size=0.85, gain=-0.5),
     make("Deep Voice", "#3b82f6", pitch=-4, bass=3, low_cut=60),
