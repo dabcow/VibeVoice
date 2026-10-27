@@ -41,13 +41,25 @@ Windows SmartScreen may warn about an unsigned app the first time. Click
 - **Hear Myself**: live monitoring through your headphones.
 - **Customize**: 26 controls. Use *Save as new* to keep your own voices. Edits
   to custom voices save automatically.
+- **Background layers** (Layers tab): stack chaotic backgrounds on top of any
+  voice. They play into your mic nonstop, with random timing, so they never loop
+  the same way twice.
+  - **Zoo**: monkeys, elephants, lions, ducks, sheep, cows, parrots and dogs
+  - **Sea**: crashing waves, seagulls, boat horns and a bell buoy
+  - **Storm**: heavy rain, gusting wind and rolling thunder
+  - **City Traffic**, **Jungle**, **Campfire**, **Construction** and **Space Battle**
+
+  Each layer has its own volume, and there's a master volume. `Ctrl+Alt+L`
+  pauses all layers from any app. Layers keep playing when VOICE is off, and
+  Mute silences everything. Every sound is synthesized in code, with no
+  recordings, so the app stays small.
 - **Share voices with a code**: click *Share* to copy a short code for the
   current voice, such as `VV1-69YK7sSXEpbBuJbcpo3UuNhJJtMaeWXEv5E1uiU`. A
   friend clicks *Import code* and pastes it to get the exact same voice. Codes
   are safe to paste in Discord, and a checksum catches typos.
 - **Global hotkeys** that work while you're in a game:
   `Ctrl+Alt+1..9` switch voice, `Ctrl+Alt+0` turns the effect on/off,
-  `Ctrl+Alt+M` mutes.
+  `Ctrl+Alt+M` mutes, `Ctrl+Alt+L` pauses background layers.
 - Noise gate, level meters, and a monitor volume control.
 
 ## Why it's light
@@ -91,6 +103,7 @@ build.py              builds dist/VibeVoice.exe with PyInstaller
 vibevoice/dsp.py      effects: pitch shifters, phase vocoder, reverb, echo, EQ, ...
 vibevoice/profiles.py parameter schema + built-in voices
 vibevoice/sharecode.py voice <-> share code (packed, CRC-checked, base58)
+vibevoice/ambience.py background layers: sound synthesis + real-time mixer
 vibevoice/engine.py   audio I/O: mic -> effects -> virtual cable / monitor
 vibevoice/hotkeys.py  global hotkeys (Win32 RegisterHotKey)
 vibevoice/app.py      GUI

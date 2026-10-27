@@ -9,6 +9,7 @@ import tkinter as tk
 import webbrowser
 from tkinter import messagebox, simpledialog, ttk
 
+from . import ambience
 from . import engine as eng
 from . import sharecode
 from .hotkeys import MOD_ALT, MOD_CONTROL, GlobalHotkeys
@@ -138,11 +139,16 @@ class VibeVoiceApp:
         self._select(self._profile_index(self.cfg.get("profile", "Clean")))
         self.engine.set_gate(self.gate_var.get())
         self._restart_engine()
+        for lid, st in self.layer_state.items():
+            if st["on"]:
+                ambience.prepare(lid)
+        self._push_layers()
 
         self.hotkeys = GlobalHotkeys(
             [(MOD_CONTROL | MOD_ALT, 0x31 + i, ("profile", i)) for i in range(9)]
             + [(MOD_CONTROL | MOD_ALT, 0x30, ("toggle", None)),
-               (MOD_CONTROL | MOD_ALT, 0x4D, ("mute", None))])
+               (MOD_CONTROL | MOD_ALT, 0x4D, ("mute", None)),
+               (MOD_CONTROL | MOD_ALT, 0x4C, ("layers", None))])
         root.bind("<Key>", self._on_key)
         root.protocol("WM_DELETE_WINDOW", self._quit)
         self._tick()
@@ -163,6 +169,8 @@ class VibeVoiceApp:
             "cable": self.cable_var.get(), "monitor": self.mon_var.get(),
             "latency": self.lat_var.get(), "gate": self.gate_var.get(),
             "monitor_vol": self.mvol_var.get(), "geometry": self.root.geometry(),
+            "layers": self.layer_state, "layers_master": self.layer_master.get(),
+            "layers_paused": not self.t_layers.on,
         })
         try:
             os.makedirs(CFG_DIR, exist_ok=True)
@@ -260,10 +268,13 @@ class VibeVoiceApp:
         nb = ttk.Notebook(rightcol)
         nb.pack(fill="both", expand=True, pady=(12, 0))
         self.tab_custom = tk.Frame(nb, bg=CARD)
+        self.tab_layers = tk.Frame(nb, bg=CARD)
         self.tab_setup = tk.Frame(nb, bg=CARD)
         nb.add(self.tab_custom, text="Customize")
+        nb.add(self.tab_layers, text="Layers")
         nb.add(self.tab_setup, text="Setup")
         self._build_customize(self.tab_custom)
+        self._build_layers(self.tab_layers)
         self._build_setup(self.tab_setup)
 
         # status bar
@@ -482,6 +493,88 @@ class VibeVoiceApp:
                 return
             p["params"] = copy.deepcopy(builtin["params"])
         self._select(self.current)
+
+    # ---- background layers -------------------------------------------------------------
+    def _build_layers(self, parent):
+        saved = self.cfg.get("layers", {})
+        self.layer_state = {lid: {"on": bool(saved.get(lid, {}).get("on", False)),
+                                  "vol": float(saved.get(lid, {}).get("vol", 0.7))}
+                            for lid in ambience.LAYER_IDS}
+        self.layer_widgets = {}
+        top = tk.Frame(parent, bg=CARD, padx=12, pady=10)
+        top.pack(fill="x")
+        self._label(top, "Background layers", 12, True, bg=CARD).grid(row=0, column=0, sticky="w")
+        self.t_layers = Toggle(top, "LAYERS ON", "LAYERS PAUSED", lambda on: self._push_layers(),
+                               on=not self.cfg.get("layers_paused", False))
+        self.t_layers.grid(row=0, column=2, sticky="e")
+        self._label(top, "Stack noisy backgrounds on top of any voice; they play into your mic "
+                    "nonstop. Ctrl+Alt+L pauses them from any app.", 9, fg=MUTED, bg=CARD,
+                    justify="left", wraplength=430).grid(row=1, column=0, columnspan=3,
+                                                         sticky="w", pady=(2, 6))
+        self._label(top, "Master volume", 10, bg=CARD).grid(row=2, column=0, sticky="w")
+        self.layer_master = tk.DoubleVar(value=self.cfg.get("layers_master", 1.0))
+        self._layer_scale(top, self.layer_master, 1.5).grid(row=2, column=1, columnspan=2,
+                                                            sticky="ew", padx=(10, 0))
+        top.columnconfigure(1, weight=1)
+
+        sf = ScrollFrame(parent, bg=CARD)
+        sf.pack(fill="both", expand=True, padx=(12, 0), pady=(0, 10))
+        sf.inner.columnconfigure(0, weight=1)
+        for r, (lid, name, color, desc, _build) in enumerate(ambience.LAYERS):
+            st = self.layer_state[lid]
+            card = tk.Frame(sf.inner, bg=PANEL)
+            card.grid(row=r, column=0, sticky="ew", pady=4, padx=(0, 10))
+            card.columnconfigure(1, weight=1)
+            tk.Frame(card, bg=color, width=6).grid(row=0, column=0, rowspan=3, sticky="ns")
+            self._label(card, name, 11, True).grid(row=0, column=1, sticky="w", padx=10, pady=(8, 0))
+            self._label(card, desc, 9, fg=MUTED, justify="left", wraplength=330).grid(
+                row=1, column=1, sticky="w", padx=10)
+            tog = Toggle(card, "ON", "OFF", lambda on, k=lid: self._on_layer_toggle(k, on),
+                         on=st["on"], color=color)
+            tog.grid(row=0, column=2, rowspan=2, padx=10, pady=(8, 0), sticky="e")
+            vol = tk.DoubleVar(value=st["vol"])
+            row = tk.Frame(card, bg=PANEL)
+            row.grid(row=2, column=1, columnspan=2, sticky="ew", padx=10, pady=(4, 8))
+            row.columnconfigure(1, weight=1)
+            self._label(row, "Volume", 9, fg=MUTED).grid(row=0, column=0, sticky="w")
+            self._layer_scale(row, vol, 1.5, bg=PANEL,
+                              cmd=lambda k=lid, v=vol: self._on_layer_volume(k, v)).grid(
+                row=0, column=1, sticky="ew", padx=8)
+            status = self._label(row, "", 9, fg="#eab308", width=10, anchor="e")
+            status.grid(row=0, column=2, sticky="e")
+            self.layer_widgets[lid] = (tog, vol, status)
+
+    def _layer_scale(self, parent, var, hi, bg=CARD, cmd=None):
+        return tk.Scale(parent, from_=0, to=hi, resolution=0.05, orient="horizontal",
+                        variable=var, showvalue=0, bg=bg, troughcolor=BG,
+                        activebackground=ACCENT, highlightthickness=0, bd=0,
+                        sliderrelief="flat", sliderlength=16, width=10,
+                        command=lambda v: (cmd or self._push_layers)())
+
+    def _on_layer_toggle(self, lid, on):
+        self.layer_state[lid]["on"] = on
+        if on:
+            ambience.prepare(lid)  # renders its sounds in the background
+        self._push_layers()
+        if not on:
+            ambience.release(lid)  # free the memory
+        self._save_cfg()
+
+    def _on_layer_volume(self, lid, var):
+        self.layer_state[lid]["vol"] = round(var.get(), 2)
+        self._push_layers()
+
+    def _push_layers(self):
+        master = self.layer_master.get() if self.t_layers.on else 0.0
+        self.engine.set_layers({lid: st["vol"] * master
+                                for lid, st in self.layer_state.items() if st["on"]})
+
+    def _update_layer_status(self):
+        for lid, (_tog, _vol, status) in self.layer_widgets.items():
+            loading = self.layer_state[lid]["on"] and not ambience.ready(lid)
+            text = "creating…" if loading else ""
+            if status.cget("text") != text:
+                status.configure(text=text)
 
     # ---- share codes ---------------------------------------------------------------
     def _code_dialog(self, title, message, code=None):
@@ -714,6 +807,8 @@ class VibeVoiceApp:
             self.t_voice.set(not self.t_voice.on, fire=True)
         elif tag == "mute":
             self.t_mute.set(not self.t_mute.on, fire=True)
+        elif tag == "layers":
+            self.t_layers.set(not self.t_layers.on, fire=True)
 
     # ---- periodic UI update ------------------------------------------------------------------
     def _tick(self):
@@ -730,6 +825,7 @@ class VibeVoiceApp:
             self.b_rec.configure(text="●  Record")
         while not self.hotkeys.events.empty():
             self._handle_hotkey(*self.hotkeys.events.get_nowait())
+        self._update_layer_status()
         if e.running:
             lat = (e.in_stream.latency or 0) + 2 * e.blocksize / eng.SR
             if e.cable_stream is not None:
@@ -742,6 +838,10 @@ class VibeVoiceApp:
             if self.work.get("target_f0", 0) > 0:
                 heard = (f"   your pitch ~{sv.user_f0:.0f} Hz" if sv.user_f0
                          else "   learning your pitch… keep talking")
+            playing = [name for lid, name, *_ in ambience.LAYERS
+                       if lid in e.layer_levels and ambience.ready(lid)]
+            if playing:
+                heard += "   layers: " + ", ".join(playing)
             self.status.configure(
                 text=f"● Running   DSP load {e.load * 100:4.1f}%   "
                      f"latency ~{lat * 1000:.0f} ms   output → {out}" + heard

@@ -1,10 +1,12 @@
 """Audio I/O: mic -> VoiceChain -> virtual cable (+ optional monitor)."""
+import sys
 import threading
 import time
 
 import numpy as np
 import sounddevice as sd
 
+from .ambience import LayerPlayer
 from .dsp import F32, VoiceChain
 
 SR = 48000
@@ -105,10 +107,15 @@ def is_virtual(name):
 
 class AudioEngine:
     def __init__(self):
+        # hand the GIL to the audio thread quickly while other threads compute
+        sys.setswitchinterval(0.001)
         self.chain = VoiceChain(SR)
+        self.chain.layers = LayerPlayer(SR)
         self.params = {}
         self.gate_db = -50.0
         self._pending = None
+        self.layer_levels = {}
+        self._pending_layers = None
         self.enabled = True
         self.muted = False
         self.monitor_vol = 0.8
@@ -137,6 +144,11 @@ class AudioEngine:
     def set_gate(self, db):
         self.gate_db = db
         self._pending = (self.params, db)
+
+    def set_layers(self, levels):
+        """Background layers to mix in: {layer id: volume}."""
+        self.layer_levels = dict(levels)
+        self._pending_layers = self.layer_levels
 
     # ---- streams -------------------------------------------------------------
     def _extra(self):
@@ -217,6 +229,10 @@ class AudioEngine:
             self._pending = None
             self.chain.configure(pending[0])
             self.chain.set_gate(pending[1])
+        layers = self._pending_layers
+        if layers is not None:
+            self._pending_layers = None
+            self.chain.layers.configure(layers)
         if self._rec is not None:
             self._rec.append(x.copy())
             self._rec_n += frames
@@ -228,8 +244,12 @@ class AudioEngine:
             y = np.zeros(frames, F32)
         elif self.enabled:
             y = self.chain.process(x)
-        else:
+        else:  # voice effect off: clean mic, background layers keep playing
             y = x
+            if self.chain.layers.active:
+                bg = self.chain.layers.process(frames)
+                if bg is not None:
+                    y = np.clip(x + bg, -1.0, 1.0)
         self.out_peak = max(self.out_peak, float(np.max(np.abs(y))))
         if self.cable_stream is not None:
             self.cable_fifo.write(y)
@@ -270,6 +290,8 @@ class AudioEngine:
             c.spectral.avg_lf0, c.spectral.f0_count = live.avg_lf0, live.f0_count
         c.configure(params)
         c.set_gate(self.gate_db)
+        c.layers = LayerPlayer(SR)  # the test clip gets the same background layers
+        c.layers.configure(self.layer_levels)
         out = np.empty_like(raw)
         for i in range(0, len(raw), self.blocksize):
             out[i:i + self.blocksize] = c.process(raw[i:i + self.blocksize])

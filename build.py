@@ -14,7 +14,7 @@ BUILD = os.path.join(ROOT, "build")
 VENV = os.path.join(BUILD, "venv")
 PY = os.path.join(VENV, "Scripts", "python.exe")
 ICON = os.path.join(ROOT, "assets", "icon.ico")
-VERSION = (1, 2, 0)
+VERSION = (1, 3, 0)
 
 VERSION_INFO = f"""\
 VSVersionInfo(

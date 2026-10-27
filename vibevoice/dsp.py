@@ -589,6 +589,7 @@ class VoiceChain:
         self.p = {}
         self.gain = 1.0
         self.delay_pitch = False
+        self.layers = None  # optional background mixer (ambience.LayerPlayer)
 
     def configure(self, p):
         self.p = dict(p)
@@ -636,4 +637,8 @@ class VoiceChain:
             x = self.reverb.process(x, p["reverb_mix"], p["reverb_size"])
         if self.gain != 1.0:
             x = x * F32(self.gain)
+        if self.layers is not None and self.layers.active:
+            bg = self.layers.process(len(x))
+            if bg is not None:
+                x = x + bg
         return self.limiter.process(x.astype(F32, copy=False))
