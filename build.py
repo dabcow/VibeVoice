@@ -3,7 +3,7 @@
     python build.py
 
 Builds inside a fresh, minimal virtual environment (numpy + sounddevice +
-PyInstaller only) so nothing else installed on this machine ends up in the exe.
+soundfile + PyInstaller only) so nothing else installed on this machine ends up in the exe.
 """
 import os
 import subprocess
@@ -14,7 +14,7 @@ BUILD = os.path.join(ROOT, "build")
 VENV = os.path.join(BUILD, "venv")
 PY = os.path.join(VENV, "Scripts", "python.exe")
 ICON = os.path.join(ROOT, "assets", "icon.ico")
-VERSION = (1, 3, 0)
+VERSION = (1, 4, 0)
 
 VERSION_INFO = f"""\
 VSVersionInfo(
@@ -53,6 +53,8 @@ def main():
         "--name", "VibeVoice",
         "--icon", ICON,
         "--add-data", ICON + os.pathsep + "assets",
+        "--add-data", os.path.join(ROOT, "assets", "sounds") + os.pathsep
+        + os.path.join("assets", "sounds"),
         "--version-file", version_file,
         "--workpath", os.path.join(BUILD, "pyinstaller"),
         "--specpath", BUILD,

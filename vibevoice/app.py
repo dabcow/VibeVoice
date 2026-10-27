@@ -520,7 +520,7 @@ class VibeVoiceApp:
         sf = ScrollFrame(parent, bg=CARD)
         sf.pack(fill="both", expand=True, padx=(12, 0), pady=(0, 10))
         sf.inner.columnconfigure(0, weight=1)
-        for r, (lid, name, color, desc, _build) in enumerate(ambience.LAYERS):
+        for r, (lid, name, color, desc) in enumerate(ambience.LAYERS):
             st = self.layer_state[lid]
             card = tk.Frame(sf.inner, bg=PANEL)
             card.grid(row=r, column=0, sticky="ew", pady=4, padx=(0, 10))
@@ -572,7 +572,7 @@ class VibeVoiceApp:
     def _update_layer_status(self):
         for lid, (_tog, _vol, status) in self.layer_widgets.items():
             loading = self.layer_state[lid]["on"] and not ambience.ready(lid)
-            text = "creating…" if loading else ""
+            text = "loading…" if loading else ""
             if status.cget("text") != text:
                 status.configure(text=text)
 

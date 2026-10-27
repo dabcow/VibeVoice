@@ -1,0 +1,1036 @@
+{
+ "smoke": {
+  "beds": [],
+  "events": [
+   {
+    "name": "Smoke Detector Chirp 1",
+    "files": [
+     "smoke/819808_0.ogg"
+    ],
+    "rate": 6,
+    "gain": [
+     0.5,
+     0.8
+    ]
+   },
+   {
+    "name": "Smoke Detector Chirp 2",
+    "files": [
+     "smoke/819807_0.ogg"
+    ],
+    "rate": 5,
+    "gain": [
+     0.3,
+     0.5
+    ]
+   },
+   {
+    "name": "Smoke alarm battery low",
+    "files": [
+     "smoke/419239_0.ogg",
+     "smoke/419239_1.ogg",
+     "smoke/419239_2.ogg",
+     "smoke/419239_3.ogg",
+     "smoke/419239_4.ogg",
+     "smoke/419239_5.ogg"
+    ],
+    "rate": 5,
+    "gain": [
+     0.3,
+     0.7
+    ]
+   },
+   {
+    "name": "Smoke detector alarm, close perspective",
+    "files": [
+     "smoke/369848_0.ogg"
+    ],
+    "rate": 0.8,
+    "gain": [
+     0.3,
+     0.5
+    ]
+   }
+  ]
+ },
+ "firealarm": {
+  "beds": [
+   {
+    "file": "firealarm/bed_319413.ogg",
+    "gain": 1.0
+   }
+  ],
+  "events": [
+   {
+    "name": "Fire Alarm",
+    "files": [
+     "firealarm/210513_0.ogg"
+    ],
+    "rate": 1.5,
+    "gain": [
+     0.3,
+     0.5
+    ]
+   },
+   {
+    "name": "fire alarm",
+    "files": [
+     "firealarm/82797_0.ogg"
+    ],
+    "rate": 1.0,
+    "gain": [
+     0.5,
+     0.7
+    ]
+   },
+   {
+    "name": "fire house alarm",
+    "files": [
+     "firealarm/325367_0.ogg"
+    ],
+    "rate": 1.2,
+    "gain": [
+     0.3,
+     0.5
+    ]
+   }
+  ]
+ },
+ "honking": {
+  "beds": [
+   {
+    "file": "honking/bed_451523.ogg",
+    "gain": 1.0
+   }
+  ],
+  "events": [
+   {
+    "name": "car horn",
+    "files": [
+     "honking/182474_0.ogg"
+    ],
+    "rate": 5,
+    "gain": [
+     0.3,
+     0.6
+    ]
+   },
+   {
+    "name": "Car Honking",
+    "files": [
+     "honking/434878_0.ogg"
+    ],
+    "rate": 4,
+    "gain": [
+     0.3,
+     0.6
+    ]
+   },
+   {
+    "name": "05 Horn",
+    "files": [
+     "honking/461679_0.ogg"
+    ],
+    "rate": 4,
+    "gain": [
+     0.3,
+     0.6
+    ]
+   },
+   {
+    "name": "Car horn beep beep two beeps honk honk",
+    "files": [
+     "honking/423990_0.ogg"
+    ],
+    "rate": 4,
+    "gain": [
+     0.3,
+     0.6
+    ]
+   },
+   {
+    "name": "Horn_Doppler_01",
+    "files": [
+     "honking/385283_0.ogg"
+    ],
+    "rate": 2,
+    "gain": [
+     0.3,
+     0.5
+    ]
+   },
+   {
+    "name": "car_horn",
+    "files": [
+     "honking/32417_0.ogg"
+    ],
+    "rate": 4,
+    "gain": [
+     0.3,
+     0.6
+    ]
+   },
+   {
+    "name": "Car Horn Honk",
+    "files": [
+     "honking/349922_0.ogg"
+    ],
+    "rate": 4,
+    "gain": [
+     0.3,
+     0.6
+    ]
+   },
+   {
+    "name": "car horn 1",
+    "files": [
+     "honking/235363_0.ogg"
+    ],
+    "rate": 3,
+    "gain": [
+     0.3,
+     0.5
+    ]
+   },
+   {
+    "name": "car horn honking",
+    "files": [
+     "honking/571348_0.ogg"
+    ],
+    "rate": 4,
+    "gain": [
+     0.3,
+     0.6
+    ]
+   }
+  ]
+ },
+ "fastfood": {
+  "beds": [
+   {
+    "file": "fastfood/bed_271443.ogg",
+    "gain": 1.0
+   },
+   {
+    "file": "fastfood/bed_455769.ogg",
+    "gain": 0.5
+   }
+  ],
+  "events": [
+   {
+    "name": "Fast Food restaurant",
+    "files": [
+     "fastfood/405148_0.ogg",
+     "fastfood/405148_1.ogg",
+     "fastfood/405148_2.ogg"
+    ],
+    "rate": 2,
+    "gain": [
+     0.4,
+     0.6
+    ]
+   },
+   {
+    "name": "Deep fryer beep noise",
+    "files": [
+     "fastfood/844265_0.ogg"
+    ],
+    "rate": 3,
+    "gain": [
+     0.15,
+     0.3
+    ]
+   }
+  ]
+ },
+ "lecture": {
+  "beds": [
+   {
+    "file": "lecture/bed_168503.ogg",
+    "gain": 1.0
+   },
+   {
+    "file": "lecture/bed_869630.ogg",
+    "gain": 0.25
+   }
+  ],
+  "events": [
+   {
+    "name": "Cough",
+    "files": [
+     "lecture/151217_0.ogg"
+    ],
+    "rate": 2,
+    "gain": [
+     0.15,
+     0.3
+    ]
+   },
+   {
+    "name": "Cough",
+    "files": [
+     "lecture/208761_0.ogg",
+     "lecture/208761_1.ogg",
+     "lecture/208761_2.ogg"
+    ],
+    "rate": 1.5,
+    "gain": [
+     0.15,
+     0.3
+    ]
+   }
+  ]
+ },
+ "india": {
+  "beds": [
+   {
+    "file": "india/bed_263636.ogg",
+    "gain": 1.0
+   },
+   {
+    "file": "india/bed_450730.ogg",
+    "gain": 0.7
+   }
+  ],
+  "events": [
+   {
+    "name": "Mumbai - Market",
+    "files": [
+     "india/453005_0.ogg",
+     "india/453005_1.ogg",
+     "india/453005_2.ogg",
+     "india/453005_3.ogg"
+    ],
+    "rate": 3,
+    "gain": [
+     0.4,
+     0.7
+    ]
+   },
+   {
+    "name": "India Trivandrum Street Market",
+    "files": [
+     "india/263635_0.ogg",
+     "india/263635_1.ogg",
+     "india/263635_2.ogg",
+     "india/263635_3.ogg",
+     "india/263635_4.ogg"
+    ],
+    "rate": 3,
+    "gain": [
+     0.4,
+     0.7
+    ]
+   },
+   {
+    "name": "Indian Street traffic Ambience 2",
+    "files": [
+     "india/585570_0.ogg",
+     "india/585570_1.ogg",
+     "india/585570_2.ogg",
+     "india/585570_3.ogg"
+    ],
+    "rate": 2,
+    "gain": [
+     0.4,
+     0.6
+    ]
+   }
+  ]
+ },
+ "zoo": {
+  "beds": [
+   {
+    "file": "zoo/bed_263569.ogg",
+    "gain": 1.0
+   }
+  ],
+  "events": [
+   {
+    "name": "Elephant (Manyara, Tanzania)",
+    "files": [
+     "zoo/103117_0.ogg",
+     "zoo/103117_1.ogg",
+     "zoo/103117_2.ogg",
+     "zoo/103117_3.ogg"
+    ],
+    "rate": 4,
+    "gain": [
+     0.4,
+     0.7
+    ]
+   },
+   {
+    "name": "Elephant Trumpets Growls",
+    "files": [
+     "zoo/527845_0.ogg"
+    ],
+    "rate": 3,
+    "gain": [
+     0.4,
+     0.7
+    ]
+   },
+   {
+    "name": "Lion loud",
+    "files": [
+     "zoo/69570_0.ogg",
+     "zoo/69570_1.ogg",
+     "zoo/69570_2.ogg",
+     "zoo/69570_3.ogg"
+    ],
+    "rate": 3,
+    "gain": [
+     0.4,
+     0.7
+    ]
+   },
+   {
+    "name": "Lion roaring",
+    "files": [
+     "zoo/69572_0.ogg",
+     "zoo/69572_1.ogg",
+     "zoo/69572_2.ogg"
+    ],
+    "rate": 3,
+    "gain": [
+     0.4,
+     0.7
+    ]
+   },
+   {
+    "name": "Lions two",
+    "files": [
+     "zoo/69571_0.ogg",
+     "zoo/69571_1.ogg"
+    ],
+    "rate": 2,
+    "gain": [
+     0.4,
+     0.7
+    ]
+   },
+   {
+    "name": "Affen schreit (chimpanzee, Leipzig Zoo)",
+    "files": [
+     "zoo/67361_0.ogg"
+    ],
+    "rate": 4,
+    "gain": [
+     0.4,
+     0.7
+    ]
+   },
+   {
+    "name": "Gibbon Monkey",
+    "files": [
+     "zoo/67355_0.ogg"
+    ],
+    "rate": 3,
+    "gain": [
+     0.4,
+     0.7
+    ]
+   },
+   {
+    "name": "Sheep bleating",
+    "files": [
+     "zoo/362283_0.ogg",
+     "zoo/362283_1.ogg",
+     "zoo/362283_2.ogg",
+     "zoo/362283_3.ogg"
+    ],
+    "rate": 4,
+    "gain": [
+     0.3,
+     0.6
+    ]
+   },
+   {
+    "name": "sheep bleat outdoors",
+    "files": [
+     "zoo/210511_0.ogg",
+     "zoo/210511_1.ogg",
+     "zoo/210511_2.ogg",
+     "zoo/210511_3.ogg"
+    ],
+    "rate": 3,
+    "gain": [
+     0.3,
+     0.6
+    ]
+   },
+   {
+    "name": "Cow moos",
+    "files": [
+     "zoo/177253_0.ogg",
+     "zoo/177253_1.ogg",
+     "zoo/177253_2.ogg",
+     "zoo/177253_3.ogg"
+    ],
+    "rate": 3,
+    "gain": [
+     0.4,
+     0.7
+    ]
+   },
+   {
+    "name": "Cow mooing in south of France",
+    "files": [
+     "zoo/163727_0.ogg"
+    ],
+    "rate": 3,
+    "gain": [
+     0.4,
+     0.7
+    ]
+   },
+   {
+    "name": "Ducks",
+    "files": [
+     "zoo/607226_0.ogg"
+    ],
+    "rate": 3,
+    "gain": [
+     0.3,
+     0.6
+    ]
+   },
+   {
+    "name": "single quack from a duck",
+    "files": [
+     "zoo/418509_0.ogg"
+    ],
+    "rate": 3,
+    "gain": [
+     0.3,
+     0.5
+    ]
+   },
+   {
+    "name": "Parrots",
+    "files": [
+     "zoo/187928_0.ogg"
+    ],
+    "rate": 3,
+    "gain": [
+     0.3,
+     0.6
+    ]
+   }
+  ]
+ },
+ "sea": {
+  "beds": [
+   {
+    "file": "sea/bed_412308.ogg",
+    "gain": 1.0
+   },
+   {
+    "file": "sea/bed_531015.ogg",
+    "gain": 0.6
+   }
+  ],
+  "events": [
+   {
+    "name": "Seagull on beach",
+    "files": [
+     "sea/353416_0.ogg",
+     "sea/353416_1.ogg",
+     "sea/353416_2.ogg",
+     "sea/353416_3.ogg",
+     "sea/353416_4.ogg"
+    ],
+    "rate": 5,
+    "gain": [
+     0.3,
+     0.6
+    ]
+   },
+   {
+    "name": "Seagulls clean wildtrack",
+    "files": [
+     "sea/462462_0.ogg",
+     "sea/462462_1.ogg",
+     "sea/462462_2.ogg",
+     "sea/462462_3.ogg",
+     "sea/462462_4.ogg"
+    ],
+    "rate": 5,
+    "gain": [
+     0.3,
+     0.6
+    ]
+   },
+   {
+    "name": "Ship Horn (Hamburg harbour)",
+    "files": [
+     "sea/64601_0.ogg",
+     "sea/64601_1.ogg"
+    ],
+    "rate": 1,
+    "gain": [
+     0.4,
+     0.7
+    ]
+   },
+   {
+    "name": "Boat Horn",
+    "files": [
+     "sea/441223_0.ogg",
+     "sea/441223_1.ogg"
+    ],
+    "rate": 1,
+    "gain": [
+     0.4,
+     0.7
+    ]
+   },
+   {
+    "name": "ship horn",
+    "files": [
+     "sea/208714_0.ogg",
+     "sea/208714_1.ogg"
+    ],
+    "rate": 1,
+    "gain": [
+     0.4,
+     0.6
+    ]
+   }
+  ]
+ },
+ "storm": {
+  "beds": [
+   {
+    "file": "storm/bed_507902.ogg",
+    "gain": 1.0
+   },
+   {
+    "file": "storm/bed_200272.ogg",
+    "gain": 0.6
+   },
+   {
+    "file": "storm/bed_97397.ogg",
+    "gain": 0.5
+   }
+  ],
+  "events": [
+   {
+    "name": "Heavy Thunder Strike - no Rain",
+    "files": [
+     "storm/446753_0.ogg",
+     "storm/446753_1.ogg",
+     "storm/446753_2.ogg"
+    ],
+    "rate": 2,
+    "gain": [
+     0.6,
+     0.9
+    ]
+   },
+   {
+    "name": "Thunder Clap",
+    "files": [
+     "storm/194364_0.ogg",
+     "storm/194364_1.ogg",
+     "storm/194364_2.ogg"
+    ],
+    "rate": 2,
+    "gain": [
+     0.6,
+     0.9
+    ]
+   },
+   {
+    "name": "Thunder",
+    "files": [
+     "storm/244053_0.ogg"
+    ],
+    "rate": 1.5,
+    "gain": [
+     0.5,
+     0.8
+    ]
+   }
+  ]
+ },
+ "city": {
+  "beds": [
+   {
+    "file": "city/bed_36734.ogg",
+    "gain": 1.0
+   }
+  ],
+  "events": [
+   {
+    "name": "police siren",
+    "files": [
+     "city/52906_0.ogg",
+     "city/52906_1.ogg"
+    ],
+    "rate": 1,
+    "gain": [
+     0.3,
+     0.5
+    ]
+   },
+   {
+    "name": "Sirens",
+    "files": [
+     "city/658724_0.ogg"
+    ],
+    "rate": 1,
+    "gain": [
+     0.3,
+     0.5
+    ]
+   },
+   {
+    "name": "Group of Dogs Barking",
+    "files": [
+     "city/337101_0.ogg",
+     "city/337101_1.ogg"
+    ],
+    "rate": 2,
+    "gain": [
+     0.3,
+     0.5
+    ]
+   },
+   {
+    "name": "Dog Small Alert Bark",
+    "files": [
+     "city/163459_0.ogg"
+    ],
+    "rate": 2,
+    "gain": [
+     0.2,
+     0.4
+    ]
+   },
+   {
+    "name": "car horn",
+    "files": [
+     "city/182474_0.ogg"
+    ],
+    "rate": 4,
+    "gain": [
+     0.3,
+     0.5
+    ]
+   }
+  ]
+ },
+ "jungle": {
+  "beds": [
+   {
+    "file": "jungle/bed_424763.ogg",
+    "gain": 1.0
+   },
+   {
+    "file": "jungle/bed_123087.ogg",
+    "gain": 0.7
+   }
+  ],
+  "events": [
+   {
+    "name": "howler_monkey_jungle_4",
+    "files": [
+     "jungle/123044_0.ogg",
+     "jungle/123044_1.ogg",
+     "jungle/123044_2.ogg",
+     "jungle/123044_3.ogg"
+    ],
+    "rate": 3,
+    "gain": [
+     0.4,
+     0.7
+    ]
+   },
+   {
+    "name": "Monos Aulladores - Howler monkeys",
+    "files": [
+     "jungle/232748_0.ogg",
+     "jungle/232748_1.ogg",
+     "jungle/232748_2.ogg",
+     "jungle/232748_3.ogg"
+    ],
+    "rate": 3,
+    "gain": [
+     0.4,
+     0.7
+    ]
+   },
+   {
+    "name": "Frogs and Crickets",
+    "files": [
+     "jungle/32655_0.ogg",
+     "jungle/32655_1.ogg",
+     "jungle/32655_2.ogg"
+    ],
+    "rate": 2,
+    "gain": [
+     0.3,
+     0.5
+    ]
+   },
+   {
+    "name": "Frog",
+    "files": [
+     "jungle/536759_0.ogg"
+    ],
+    "rate": 6,
+    "gain": [
+     0.3,
+     0.6
+    ]
+   }
+  ]
+ },
+ "campfire": {
+  "beds": [
+   {
+    "file": "campfire/bed_62487.ogg",
+    "gain": 1.0
+   },
+   {
+    "file": "campfire/bed_522299.ogg",
+    "gain": 0.35
+   }
+  ],
+  "events": [
+   {
+    "name": "Owl Hoot",
+    "files": [
+     "campfire/465697_0.ogg"
+    ],
+    "rate": 1.5,
+    "gain": [
+     0.3,
+     0.5
+    ]
+   },
+   {
+    "name": "owl",
+    "files": [
+     "campfire/398734_0.ogg"
+    ],
+    "rate": 1.5,
+    "gain": [
+     0.3,
+     0.5
+    ]
+   },
+   {
+    "name": "Owls Forest",
+    "files": [
+     "campfire/151241_0.ogg",
+     "campfire/151241_1.ogg",
+     "campfire/151241_2.ogg"
+    ],
+    "rate": 1,
+    "gain": [
+     0.3,
+     0.5
+    ]
+   }
+  ]
+ },
+ "construction": {
+  "beds": [
+   {
+    "file": "construction/bed_246171.ogg",
+    "gain": 1.0
+   },
+   {
+    "file": "construction/bed_118042.ogg",
+    "gain": 0.5
+   }
+  ],
+  "events": [
+   {
+    "name": "Jack Hammer breaking up concrete",
+    "files": [
+     "construction/273697_0.ogg"
+    ],
+    "rate": 3,
+    "gain": [
+     0.4,
+     0.7
+    ]
+   },
+   {
+    "name": "Jackhammer",
+    "files": [
+     "construction/42097_0.ogg"
+    ],
+    "rate": 3,
+    "gain": [
+     0.4,
+     0.7
+    ]
+   },
+   {
+    "name": "Jackhammer close",
+    "files": [
+     "construction/271662_0.ogg",
+     "construction/271662_1.ogg"
+    ],
+    "rate": 2,
+    "gain": [
+     0.4,
+     0.7
+    ]
+   },
+   {
+    "name": "Reversing truck beeps, alley",
+    "files": [
+     "construction/567294_0.ogg",
+     "construction/567294_1.ogg",
+     "construction/567294_2.ogg"
+    ],
+    "rate": 2,
+    "gain": [
+     0.3,
+     0.5
+    ]
+   },
+   {
+    "name": "Hammering",
+    "files": [
+     "construction/207782_0.ogg"
+    ],
+    "rate": 4,
+    "gain": [
+     0.4,
+     0.7
+    ]
+   },
+   {
+    "name": "hammering 2",
+    "files": [
+     "construction/17012_0.ogg"
+    ],
+    "rate": 4,
+    "gain": [
+     0.4,
+     0.7
+    ]
+   }
+  ]
+ },
+ "space": {
+  "beds": [
+   {
+    "file": "space/bed_130883.ogg",
+    "gain": 1.0
+   }
+  ],
+  "events": [
+   {
+    "name": "Laser Weapon Sounds",
+    "files": [
+     "space/187119_0.ogg",
+     "space/187119_1.ogg",
+     "space/187119_2.ogg",
+     "space/187119_3.ogg",
+     "space/187119_4.ogg",
+     "space/187119_5.ogg",
+     "space/187119_6.ogg",
+     "space/187119_7.ogg",
+     "space/187119_8.ogg",
+     "space/187119_9.ogg"
+    ],
+    "rate": 14,
+    "gain": [
+     0.3,
+     0.6
+    ]
+   },
+   {
+    "name": "Laser blast x3",
+    "files": [
+     "space/214990_0.ogg"
+    ],
+    "rate": 5,
+    "gain": [
+     0.3,
+     0.6
+    ]
+   },
+   {
+    "name": "Sci-fi gun shot x6",
+    "files": [
+     "space/330293_0.ogg",
+     "space/330293_1.ogg",
+     "space/330293_2.ogg",
+     "space/330293_3.ogg",
+     "space/330293_4.ogg",
+     "space/330293_5.ogg"
+    ],
+    "rate": 6,
+    "gain": [
+     0.3,
+     0.6
+    ]
+   },
+   {
+    "name": "Explosion_01",
+    "files": [
+     "space/235968_0.ogg"
+    ],
+    "rate": 3,
+    "gain": [
+     0.5,
+     0.8
+    ]
+   },
+   {
+    "name": "Explosion at a construction site",
+    "files": [
+     "space/97896_0.ogg"
+    ],
+    "rate": 2,
+    "gain": [
+     0.5,
+     0.8
+    ]
+   },
+   {
+    "name": "Nuclear Alarm",
+    "files": [
+     "space/206141_0.ogg",
+     "space/206141_1.ogg"
+    ],
+    "rate": 1,
+    "gain": [
+     0.25,
+     0.4
+    ]
+   },
+   {
+    "name": "Missile Lock Detected",
+    "files": [
+     "space/165504_0.ogg"
+    ],
+    "rate": 1,
+    "gain": [
+     0.4,
+     0.6
+    ]
+   },
+   {
+    "name": "Retro Sci Fi Computer",
+    "files": [
+     "space/260103_0.ogg"
+    ],
+    "rate": 3,
+    "gain": [
+     0.3,
+     0.5
+    ]
+   }
+  ]
+ }
+}
