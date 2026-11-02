@@ -42,6 +42,32 @@ DEFAULTS = {
 }
 
 
+# How each parameter follows the voice-intensity control. "Amounts" move from the
+# clean default towards the profile's value (and beyond it above 100 %); filter
+# cut-offs move on a log scale; character settings (rates, times, sizes,
+# target pitches) stay put so a gentler voice is still the same voice.
+_CHARACTER = {"ring_freq", "chorus_rate", "chorus_delay", "chorus_depth", "echo_time",
+              "reverb_size", "robot_pitch", "target_f0"}
+_LOG_SCALE = {"low_cut", "high_cut"}
+_BOUNDS = {key: (lo, hi) for key, _label, lo, hi, *_rest in PARAMS}
+
+
+def apply_intensity(params, k):
+    """Scale a profile's effect: k = 0 is clean, 1 as designed, 1.5 exaggerated."""
+    out = dict(params)
+    out["intensity"] = k
+    if abs(k - 1.0) < 1e-6:
+        return out
+    for key, v in params.items():
+        if key in _CHARACTER or key not in DEFAULTS:
+            continue
+        d = DEFAULTS[key]
+        nv = d * (v / d) ** k if key in _LOG_SCALE else d + (v - d) * k
+        lo, hi = _BOUNDS[key]
+        out[key] = min(hi, max(lo, nv))
+    return out
+
+
 def make(name, color, **kw):
     p = dict(DEFAULTS)
     p.update(kw)

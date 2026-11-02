@@ -39,6 +39,11 @@ Windows SmartScreen may warn about an unsigned app the first time. Click
 - **Test your voice**: record 5 seconds, then play it back through any voice,
   or play the original to compare. You can keep switching voices on the same clip.
 - **Hear Myself**: live monitoring through your headphones.
+- **Voice intensity** (Setup tab): one slider scales every voice, from 0% (your
+  normal voice) through 100% (the voice as designed) to 150% (exaggerated). It
+  turns down the amounts, such as pitch shift, robot, distortion, echo and EQ,
+  while keeping each voice's character. Girl at 50% is a gentler Girl, not a
+  different voice.
 - **Customize**: 26 controls. Use *Save as new* to keep your own voices. Edits
   to custom voices save automatically.
 - **Background layers** (Layers tab): stack chaotic backgrounds on top of any
@@ -55,7 +60,10 @@ Windows SmartScreen may warn about an unsigned app the first time. Click
   - **University Lecture**: a professor lecturing to a full hall
   - **Indian Street Market**: vendors calling out, tuk-tuks and horns
 
-  Each layer has its own volume, and there's a master volume. `Ctrl+Alt+L`
+  Each layer has its own volume, and there's a master volume. Each layer's
+  **Intensity** slider sets how often its sounds fire and how hard they hit,
+  from calm (0.2×) to chaos (3×). For example, Honking goes from about 5 horns
+  a minute to over 100. `Ctrl+Alt+L`
   pauses all layers from any app. Layers keep playing when VOICE is off, and
   Mute silences everything. Every layer is level-matched, so switching between
   them doesn't jump in volume.

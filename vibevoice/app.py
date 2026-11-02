@@ -169,6 +169,7 @@ class VibeVoiceApp:
             "cable": self.cable_var.get(), "monitor": self.mon_var.get(),
             "latency": self.lat_var.get(), "gate": self.gate_var.get(),
             "monitor_vol": self.mvol_var.get(), "geometry": self.root.geometry(),
+            "voice_intensity": self.intensity_var.get(),
             "layers": self.layer_state, "layers_master": self.layer_master.get(),
             "layers_paused": not self.t_layers.on,
         })
@@ -360,7 +361,10 @@ class VibeVoiceApp:
         r = len(rows)
         self.gate_var = tk.DoubleVar(value=self.cfg.get("gate", -50))
         self.mvol_var = tk.DoubleVar(value=self.cfg.get("monitor_vol", 0.8))
+        self.intensity_var = tk.DoubleVar(value=self.cfg.get("voice_intensity", 100))
+        self.engine.intensity = self.intensity_var.get() / 100  # before the first voice loads
         for label, var, lo, hi, res, cmd in (
+                ("Voice intensity (%)", self.intensity_var, 0, 150, 5, self._on_intensity),
                 ("Noise gate (dB)", self.gate_var, -80, -20, 1, self._on_gate),
                 ("Monitor volume", self.mvol_var, 0, 1.5, 0.05, self._on_mvol)):
             self._label(f, label, 10, bg=CARD).grid(row=r, column=0, sticky="w", pady=5)
@@ -377,6 +381,8 @@ class VibeVoiceApp:
             "1. Install VB-Audio Virtual Cable (free) once and reboot if asked.\n"
             "2. Set 'Virtual mic output' above to “CABLE Input”.\n"
             "3. In Discord / Zoom / OBS / games pick “CABLE Output” as the microphone.\n"
+            "Voice intensity scales every voice: 0% is your normal voice, 100% the voice as "
+            "designed, 150% exaggerated.\n"
             "Noise gate: raise it if background noise leaks through; -80 turns it off.\n"
             "Hotkeys (work everywhere): Ctrl+Alt+1-9 voices, Ctrl+Alt+0 voice on/off, "
             "Ctrl+Alt+M mute.")
@@ -498,7 +504,8 @@ class VibeVoiceApp:
     def _build_layers(self, parent):
         saved = self.cfg.get("layers", {})
         self.layer_state = {lid: {"on": bool(saved.get(lid, {}).get("on", False)),
-                                  "vol": float(saved.get(lid, {}).get("vol", 0.7))}
+                                  "vol": float(saved.get(lid, {}).get("vol", 0.7)),
+                                  "int": float(saved.get(lid, {}).get("int", 1.0))}
                             for lid in ambience.LAYER_IDS}
         self.layer_widgets = {}
         top = tk.Frame(parent, bg=CARD, padx=12, pady=10)
@@ -525,7 +532,7 @@ class VibeVoiceApp:
             card = tk.Frame(sf.inner, bg=PANEL)
             card.grid(row=r, column=0, sticky="ew", pady=4, padx=(0, 10))
             card.columnconfigure(1, weight=1)
-            tk.Frame(card, bg=color, width=6).grid(row=0, column=0, rowspan=3, sticky="ns")
+            tk.Frame(card, bg=color, width=6).grid(row=0, column=0, rowspan=4, sticky="ns")
             self._label(card, name, 11, True).grid(row=0, column=1, sticky="w", padx=10, pady=(8, 0))
             self._label(card, desc, 9, fg=MUTED, justify="left", wraplength=330).grid(
                 row=1, column=1, sticky="w", padx=10)
@@ -533,19 +540,36 @@ class VibeVoiceApp:
                          on=st["on"], color=color)
             tog.grid(row=0, column=2, rowspan=2, padx=10, pady=(8, 0), sticky="e")
             vol = tk.DoubleVar(value=st["vol"])
+            inten = tk.DoubleVar(value=st["int"])
             row = tk.Frame(card, bg=PANEL)
             row.grid(row=2, column=1, columnspan=2, sticky="ew", padx=10, pady=(4, 8))
             row.columnconfigure(1, weight=1)
-            self._label(row, "Volume", 9, fg=MUTED).grid(row=0, column=0, sticky="w")
+            self._label(row, "Volume", 9, fg=MUTED, width=8, anchor="w").grid(
+                row=0, column=0, sticky="w")
             self._layer_scale(row, vol, 1.5, bg=PANEL,
                               cmd=lambda k=lid, v=vol: self._on_layer_volume(k, v)).grid(
                 row=0, column=1, sticky="ew", padx=8)
             status = self._label(row, "", 9, fg="#eab308", width=10, anchor="e")
             status.grid(row=0, column=2, sticky="e")
+            # intensity: how often the one-off sounds fire and how hard they hit
+            self._label(row, "Intensity", 9, fg=MUTED, width=8, anchor="w").grid(
+                row=1, column=0, sticky="w", pady=(2, 0))
+            ilabel = self._label(row, self._fmt_layer_intensity(st["int"]), 9, fg=MUTED,
+                                 width=10, anchor="e")
+            self._layer_scale(row, inten, 3.0, bg=PANEL, lo=0.2, res=0.1,
+                              cmd=lambda k=lid, v=inten, lb=ilabel:
+                              self._on_layer_intensity(k, v, lb)).grid(
+                row=1, column=1, sticky="ew", padx=8, pady=(2, 0))
+            ilabel.grid(row=1, column=2, sticky="e", pady=(2, 0))
             self.layer_widgets[lid] = (tog, vol, status)
 
-    def _layer_scale(self, parent, var, hi, bg=CARD, cmd=None):
-        return tk.Scale(parent, from_=0, to=hi, resolution=0.05, orient="horizontal",
+    @staticmethod
+    def _fmt_layer_intensity(k):
+        word = "calm" if k < 0.75 else "normal" if k <= 1.35 else "wild" if k <= 2.2 else "chaos"
+        return f"{k:.1f}× {word}"
+
+    def _layer_scale(self, parent, var, hi, bg=CARD, cmd=None, lo=0.0, res=0.05):
+        return tk.Scale(parent, from_=lo, to=hi, resolution=res, orient="horizontal",
                         variable=var, showvalue=0, bg=bg, troughcolor=BG,
                         activebackground=ACCENT, highlightthickness=0, bd=0,
                         sliderrelief="flat", sliderlength=16, width=10,
@@ -564,9 +588,14 @@ class VibeVoiceApp:
         self.layer_state[lid]["vol"] = round(var.get(), 2)
         self._push_layers()
 
+    def _on_layer_intensity(self, lid, var, label):
+        self.layer_state[lid]["int"] = round(var.get(), 2)
+        label.configure(text=self._fmt_layer_intensity(var.get()))
+        self._push_layers()
+
     def _push_layers(self):
         master = self.layer_master.get() if self.t_layers.on else 0.0
-        self.engine.set_layers({lid: st["vol"] * master
+        self.engine.set_layers({lid: (st["vol"] * master, st["int"])
                                 for lid, st in self.layer_state.items() if st["on"]})
 
     def _update_layer_status(self):
@@ -766,6 +795,9 @@ class VibeVoiceApp:
     def _on_mvol(self):
         self.engine.monitor_vol = self.mvol_var.get()
 
+    def _on_intensity(self):
+        self.engine.set_intensity(self.intensity_var.get() / 100)
+
     def _record(self):
         if not self.engine.running:
             messagebox.showwarning(APP, "The microphone isn't running. Check Setup.")
@@ -842,6 +874,8 @@ class VibeVoiceApp:
                        if lid in e.layer_levels and ambience.ready(lid)]
             if playing:
                 heard += "   layers: " + ", ".join(playing)
+            if round(self.intensity_var.get()) != 100:
+                heard += f"   voice intensity {self.intensity_var.get():.0f}%"
             self.status.configure(
                 text=f"● Running   DSP load {e.load * 100:4.1f}%   "
                      f"latency ~{lat * 1000:.0f} ms   output → {out}" + heard

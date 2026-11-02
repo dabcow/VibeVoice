@@ -8,6 +8,7 @@ import sounddevice as sd
 
 from .ambience import LayerPlayer
 from .dsp import F32, VoiceChain
+from .profiles import apply_intensity
 
 SR = 48000
 VIRTUAL_HINTS = ("cable input", "voicemeeter input", "voicemeeter aux input",
@@ -112,6 +113,7 @@ class AudioEngine:
         self.chain = VoiceChain(SR)
         self.chain.layers = LayerPlayer(SR)
         self.params = {}
+        self.intensity = 1.0
         self.gate_db = -50.0
         self._pending = None
         self.layer_levels = {}
@@ -139,14 +141,19 @@ class AudioEngine:
     # ---- parameters (called from GUI thread) ---------------------------------
     def set_params(self, params):
         self.params = dict(params)
-        self._pending = (self.params, self.gate_db)
+        self._pending = (apply_intensity(self.params, self.intensity), self.gate_db)
 
     def set_gate(self, db):
         self.gate_db = db
-        self._pending = (self.params, db)
+        self._pending = (apply_intensity(self.params, self.intensity), db)
+
+    def set_intensity(self, k):
+        """Voice intensity: 0 = clean, 1 = the profile as designed, 1.5 = exaggerated."""
+        self.intensity = k
+        self._pending = (apply_intensity(self.params, k), self.gate_db)
 
     def set_layers(self, levels):
-        """Background layers to mix in: {layer id: volume}."""
+        """Background layers to mix in: {layer id: (volume, intensity)}."""
         self.layer_levels = dict(levels)
         self._pending_layers = self.layer_levels
 
@@ -288,7 +295,7 @@ class AudioEngine:
         live = self.chain.spectral
         if live.user_f0:  # reuse the pitch already learned from the live mic
             c.spectral.avg_lf0, c.spectral.f0_count = live.avg_lf0, live.f0_count
-        c.configure(params)
+        c.configure(apply_intensity(params, self.intensity))
         c.set_gate(self.gate_db)
         c.layers = LayerPlayer(SR)  # the test clip gets the same background layers
         c.layers.configure(self.layer_levels)

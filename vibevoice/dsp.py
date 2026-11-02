@@ -323,13 +323,16 @@ class SpectralVoice:
         self.pv = False
         self.pitch_st = self.formant_st = 0.0
         self.target_f0 = 0.0
+        self.intensity = 1.0
         self.robot = 0.0
         self.robot_f0 = 120.0
         self.breath = 0.0
 
-    def configure(self, pv, pitch_st, formant_st, target_f0, robot, robot_f0, breath):
+    def configure(self, pv, pitch_st, formant_st, target_f0, robot, robot_f0, breath,
+                  intensity=1.0):
         self.pv = pv
         self.pitch_st, self.formant_st, self.target_f0 = pitch_st, formant_st, target_f0
+        self.intensity = intensity
         self.robot, self.breath = robot, breath
         self.robot_f0 = robot_f0
         if robot > 0 and self.car_f0 != robot_f0:
@@ -395,8 +398,10 @@ class SpectralVoice:
             auto = 12 * (math.log2(self.target_f0) - self.avg_lf0)
             nominal = 12 * math.log2(self.target_f0 / self.DEFAULT_F0)
             # a speaker already near the target needs less timbre change
+            # (formant_st already carries the intensity, so judge with the full shift)
             scale = min(1.0, max(0.0, auto / nominal)) if abs(nominal) > 0.5 else 1.0
-            st = min(19.0, max(-12.0, auto + self.pitch_st))
+            # intensity scales how far towards the target the voice is moved
+            st = min(19.0, max(-12.0, auto * self.intensity + self.pitch_st))
             return 2 ** (st / 12), 2 ** (self.formant_st * scale / 12)
         return 2 ** (self.pitch_st / 12), 2 ** (self.formant_st / 12)
 
@@ -602,7 +607,8 @@ class VoiceChain:
         self.pitch.ratio = 2 ** (pitch / 12)
         self.delay_pitch = not pv and abs(pitch) > 0.05
         self.spectral.configure(pv, pitch, formant, target, p.get("robot_mix", 0),
-                                p.get("robot_pitch", 120), p.get("breath", 0))
+                                p.get("robot_pitch", 120), p.get("breath", 0),
+                                p.get("intensity", 1.0))
         self.eq.configure(p.get("low_cut", 0), p.get("high_cut", 20000),
                           p.get("bass", 0), p.get("treble", 0))
         self.gain = 10 ** (p.get("gain", 0) / 20)

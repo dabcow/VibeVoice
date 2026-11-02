@@ -130,12 +130,18 @@ class LayerPlayer:
 
     def __init__(self, sr=SR, seed=None):
         self.sr = sr
-        self.levels = {}  # layer id -> volume
+        self.levels = {}  # layer id -> (volume, intensity)
         self.states = {}
         self.rng = np.random.default_rng(seed)
 
     def configure(self, levels):
-        self.levels = {k: v for k, v in levels.items() if v > 0}
+        """levels: {layer id: volume} or {layer id: (volume, intensity)}.
+
+        Intensity (0.2-3, 1 = normal) sets how often the one-shot sounds fire and
+        how hard they hit; the looping bed is left to the volume control.
+        """
+        norm = {k: (v if isinstance(v, tuple) else (v, 1.0)) for k, v in levels.items()}
+        self.levels = {k: v for k, v in norm.items() if v[0] > 0}
 
     @property
     def active(self):
@@ -151,13 +157,15 @@ class LayerPlayer:
                 self._fire(st, bank.events[int(self.rng.integers(len(bank.events)))], 0)
         return st
 
-    def _fire(self, st, ev, offset):
+    def _fire(self, st, ev, offset, strength=1.0):
         variants, _rate, (glo, ghi) = ev
         clip = variants[int(self.rng.integers(len(variants)))]
-        st["voices"].append([clip, -offset, float(self.rng.uniform(glo, ghi))])
+        st["voices"].append([clip, -offset, float(self.rng.uniform(glo, ghi)) * strength])
 
-    def render_layer(self, lid, bank, n):
+    def render_layer(self, lid, bank, n, intensity=1.0):
         st = self.state_for(lid, bank)
+        strength = intensity ** 0.4  # 0.2 -> 0.53x, 1 -> 1x, 3 -> 1.55x
+        max_voices = max(2, round(self.MAX_VOICES * intensity ** 0.5))
         out = np.zeros(n, np.float32)
         for j, (bed, g) in enumerate(bank.beds):
             p, L = st["pos"][j], len(bed)
@@ -169,9 +177,9 @@ class LayerPlayer:
                 out[k:] += bed[:n - k] * np.float32(g)
             st["pos"][j] = (p + n) % L
         for ev in bank.events:
-            if (len(st["voices"]) < self.MAX_VOICES
-                    and self.rng.random() < ev[1] / 60 * n / self.sr):
-                self._fire(st, ev, int(self.rng.integers(n)))
+            if (len(st["voices"]) < max_voices
+                    and self.rng.random() < ev[1] * intensity / 60 * n / self.sr):
+                self._fire(st, ev, int(self.rng.integers(n)), strength)
         keep = []
         for v in st["voices"]:
             clip, pos, g = v
@@ -188,10 +196,10 @@ class LayerPlayer:
     def process(self, n):
         """Mixed background for the next n samples, or None when nothing is playing."""
         out = None
-        for lid, vol in self.levels.items():
+        for lid, (vol, intensity) in self.levels.items():
             bank = BANKS.get(lid)
             if bank is None:
                 continue
-            y = self.render_layer(lid, bank, n) * np.float32(vol * bank.norm)
+            y = self.render_layer(lid, bank, n, intensity) * np.float32(vol * bank.norm)
             out = y if out is None else out + y
         return out
