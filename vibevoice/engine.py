@@ -16,14 +16,14 @@ VIRTUAL_HINTS = ("cable input", "voicemeeter input", "voicemeeter aux input",
 
 
 class AudioFifo:
-    """Thread-safe mono FIFO between two device clocks.
+    """Thread-safe stereo FIFO between two device clocks (mono input fills both sides).
 
     Keeps a small cushion (`prefill`) to absorb jitter and drops the oldest
     audio when it builds up, so latency stays bounded despite clock drift.
     """
 
     def __init__(self, prefill, size=SR):
-        self.buf = np.zeros(size, F32)
+        self.buf = np.zeros((size, 2), F32)
         self.size = size
         self.r = self.w = self.fill = 0
         self.prefill = prefill
@@ -32,6 +32,8 @@ class AudioFifo:
 
     def write(self, x):
         n = len(x)
+        if x.ndim == 1:
+            x = x[:, None]  # broadcasts to both channels
         with self.lock:
             end = self.w + n
             if end <= self.size:
@@ -51,7 +53,7 @@ class AudioFifo:
                 self.r = self.w
 
     def read(self, n):
-        out = np.zeros(n, F32)
+        out = np.zeros((n, 2), F32)
         with self.lock:
             if self.priming:
                 if self.fill < n + self.prefill:
@@ -266,10 +268,17 @@ class AudioEngine:
         self.load += (used - self.load) * 0.05
 
     def _cable_cb(self, outdata, frames, _t, _status):
-        outdata[:] = self.cable_fifo.read(frames)[:, None]
+        self._emit(outdata, self.cable_fifo.read(frames))
 
     def _mon_cb(self, outdata, frames, _t, _status):
-        outdata[:] = self.mon_fifo.read(frames)[:, None]
+        self._emit(outdata, self.mon_fifo.read(frames))
+
+    @staticmethod
+    def _emit(outdata, stereo):
+        if outdata.shape[1] >= 2:
+            outdata[:, :2] = stereo
+        else:  # mono device: fold the two sides together
+            outdata[:, 0] = stereo.mean(axis=1)
 
     def take_peaks(self):
         a, b = self.in_peak, self.out_peak
@@ -299,18 +308,20 @@ class AudioEngine:
         c.set_gate(self.gate_db)
         c.layers = LayerPlayer(SR)  # the test clip gets the same background layers
         c.layers.configure(self.layer_levels)
-        out = np.empty_like(raw)
-        for i in range(0, len(raw), self.blocksize):
-            out[i:i + self.blocksize] = c.process(raw[i:i + self.blocksize])
-        return out
+        # mono, or stereo (n, 2) when the voice is panned / circling
+        return np.concatenate([c.process(raw[i:i + self.blocksize])
+                               for i in range(0, len(raw), self.blocksize)])
 
     def play(self, audio):
         if self.mon_device is None:
             raise RuntimeError("Choose a headphones/speakers device first")
         sd.stop()
         a = audio * F32(self.monitor_vol)
-        if self._channels(self.mon_device, "output") == 2:
+        stereo_out = self._channels(self.mon_device, "output") == 2
+        if a.ndim == 1 and stereo_out:
             a = np.column_stack((a, a))
+        elif a.ndim == 2 and not stereo_out:
+            a = a.mean(axis=1)
         sd.play(a, SR, device=self.mon_device,
                 extra_settings=self._extra())
 

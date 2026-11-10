@@ -468,6 +468,97 @@ class SpectralVoice:
         return S * np.exp(env_t)
 
 
+class Spatializer:
+    """Mono -> stereo placement: a fixed pan, or a circular orbit around the head.
+
+    Pan uses a balance law (centre = both ears at full level, exactly as before;
+    +1 = right ear only). The orbit adds the cues that make sound circle you on
+    headphones: constant-power panning, a sub-millisecond delay at the far ear
+    (interaural time difference) and muffling plus a small dip behind the head.
+
+    The mono-safe orbit is for apps that mix the mic down to mono (Discord, game
+    chat). Its two channels always add up to the same signal, so the fold-down
+    has no comb filtering from the ear delay. The movement it carries in mono is
+    distance: louder and brighter in front, quieter and muffled behind, with a
+    Doppler pitch bend as it moves towards or away from you.
+    """
+
+    ITD = 0.00065  # max interaural delay, seconds
+    LP = 6  # moving-average taps for the "behind" muffling (~3.5 kHz)
+    # mono-safe orbit
+    ECC = 0.35  # how off-centre you sit in the orbit: front 0.65, behind 1.35 away
+    DOPPLER = 0.0145  # peak pitch deviation (~25 cents)
+    MAX_DOPPLER_DELAY = 0.03  # seconds; slow orbits get a gentler bend
+    MONO_LP = 10  # heavier muffling (~2 kHz)
+    MONO_WIDTH = 0.9  # left/right spread that still sums to a constant
+
+    def __init__(self, sr):
+        self.sr = sr
+        self.phase = 0.0
+        self.H = int((2 * self.ECC * self.MAX_DOPPLER_DELAY + self.ITD) * sr) + self.MONO_LP + 4
+        self.hist = np.zeros(self.H, F32)
+        self.doppler = None  # current delay depth, ramped so slider moves don't click
+
+    @staticmethod
+    def _muffle(buf, taps):
+        """Causal moving average of the whole buffer."""
+        c = np.concatenate(([0.0], np.cumsum(buf, dtype=np.float64)))
+        out = buf.astype(np.float64)
+        out[taps - 1:] = (c[taps:] - c[:-taps]) / taps
+        return out
+
+    @staticmethod
+    def _tap(sig, pos):
+        i = pos.astype(np.int64)
+        f = pos - i
+        return sig[i] * (1.0 - f) + sig[i + 1] * f
+
+    def process(self, x, pan, orbit, mono_safe=False):
+        n = len(x)
+        buf = np.concatenate((self.hist, x))
+        self.hist = buf[-self.H:]
+        if orbit <= 0:
+            out = np.empty((n, 2), F32)
+            out[:, 0] = x * F32(min(1.0, 1.0 - pan))
+            out[:, 1] = x * F32(min(1.0, 1.0 + pan))
+            return out
+        step = 2 * math.pi * orbit / self.sr
+        ph = self.phase + step * np.arange(n)
+        self.phase = (self.phase + step * n) % (2 * math.pi)
+        az, front = np.sin(ph), np.cos(ph)  # az: -1 left .. +1 right; front: +1 ahead
+        base = self.H + np.arange(n, dtype=np.float64) - 1.0
+        out = np.empty((n, 2), F32)
+        if mono_safe:
+            return self._mono_safe(buf, base, az, front, orbit, out)
+        self.doppler = None
+        behind = np.clip(-front, 0.0, 1.0) * 0.6
+        muffled = self._muffle(buf, self.LP)
+        level = 1.0 - 0.2 * behind / 0.6
+        for ch, (far, gain) in enumerate(((np.maximum(az, 0.0), np.sqrt((1 - az) / 2)),
+                                          (np.maximum(-az, 0.0), np.sqrt((1 + az) / 2)))):
+            pos = base - far * self.ITD * self.sr  # the far ear hears it slightly later
+            dry, muf = self._tap(buf, pos), self._tap(muffled, pos)
+            out[:, ch] = (dry * (1.0 - behind) + muf * behind) * gain * level
+        return out
+
+    def _mono_safe(self, buf, base, az, front, orbit, out):
+        n, e = len(base), self.ECC
+        # delay depth for a ~25 cent bend at this speed, capped for slow orbits
+        target = min(self.MAX_DOPPLER_DELAY, self.DOPPLER / (e * 2 * math.pi * orbit))
+        start = target if self.doppler is None else self.doppler
+        depth = start + (target - start) * (np.arange(1, n + 1) / n)
+        self.doppler = target
+        # distance = 1 - e*front, so the delay is 0 straight ahead (no added latency)
+        pos = base - depth * e * (1.0 - front) * self.sr
+        behind = 0.75 * ((1.0 - front) / 2) ** 1.5
+        y = self._tap(buf, pos) * (1.0 - behind) + self._tap(self._muffle(buf, self.MONO_LP), pos) * behind
+        y *= (1.0 - e) / (1.0 - e * front)  # 1/distance, full level in front
+        w = self.MONO_WIDTH * az
+        out[:, 0] = y * (1.0 - w)  # the channels always average to y
+        out[:, 1] = y * (1.0 + w)
+        return out
+
+
 class Limiter:
     def __init__(self):
         self.g = 1.0
@@ -478,7 +569,8 @@ class Limiter:
         g_new = target if target < self.g else self.g + (target - self.g) * 0.05
         if g_new == self.g == 1.0:
             return x
-        y = x * np.linspace(self.g, g_new, len(x), dtype=F32)
+        ramp = np.linspace(self.g, g_new, len(x), dtype=F32)
+        y = x * (ramp[:, None] if x.ndim == 2 else ramp)
         self.g = g_new
         return np.clip(y, -1.0, 1.0, out=y)
 
@@ -576,7 +668,10 @@ class EQ:
 # --------------------------------------------------------------------------
 class VoiceChain:
     """gate -> pitch -> spectral (formant/robot/breath) -> vibrato -> ring -> drive
-    -> crush -> EQ -> chorus -> echo -> reverb -> gain -> limiter"""
+    -> crush -> EQ -> chorus -> echo -> reverb -> gain -> pan/orbit -> + layers -> limiter
+
+    Returns mono (n,) normally, or stereo (n, 2) when the voice is panned or orbiting.
+    """
 
     def __init__(self, sr):
         self.sr = sr
@@ -590,11 +685,20 @@ class VoiceChain:
         self.chorus = Chorus(sr)
         self.echo = Echo(sr)
         self.reverb = Reverb(sr)
+        self.spatial = Spatializer(sr)
         self.limiter = Limiter()
         self.p = {}
         self.gain = 1.0
         self.delay_pitch = False
         self.layers = None  # optional background mixer (ambience.LayerPlayer)
+        # random pitch: a new Gaussian pick (std dev = spread) every few seconds
+        self.rand_rng = np.random.default_rng()
+        self.rand_spread = 0.0
+        self.rand_every = 1.0
+        self.rand_st = self.rand_target = 0.0
+        self.rand_clock = 0
+        self.base_pitch = 0.0
+        self.pv = False
 
     def configure(self, p):
         self.p = dict(p)
@@ -604,8 +708,14 @@ class VoiceChain:
         # cheap delay-line shifter when formants simply follow pitch; otherwise
         # the phase vocoder moves pitch and formants independently
         pv = target > 0 or abs(formant - pitch) > 0.05
+        self.pv, self.base_pitch = pv, pitch
+        self.rand_spread = p.get("pitch_rand", 0)
+        self.rand_every = max(0.1, p.get("pitch_rand_every", 1.0))
+        if self.rand_spread <= 0.01:
+            self.rand_st = self.rand_target = 0.0
+            self.rand_clock = 0
         self.pitch.ratio = 2 ** (pitch / 12)
-        self.delay_pitch = not pv and abs(pitch) > 0.05
+        self.delay_pitch = not pv and (abs(pitch) > 0.05 or self.rand_spread > 0.01)
         self.spectral.configure(pv, pitch, formant, target, p.get("robot_mix", 0),
                                 p.get("robot_pitch", 120), p.get("breath", 0),
                                 p.get("intensity", 1.0))
@@ -616,9 +726,27 @@ class VoiceChain:
     def set_gate(self, threshold_db):
         self.gate.threshold_db = threshold_db
 
+    RAND_GLIDE = 0.04  # seconds to slide to each new pitch (no clicks, still a jump)
+
+    def _random_pitch(self, n):
+        """Pick a new random pitch offset every `rand_every` seconds and glide to it."""
+        self.rand_clock -= n
+        if self.rand_clock <= 0:
+            self.rand_clock += int(self.rand_every * self.sr)
+            pick = self.rand_rng.normal(0.0, self.rand_spread)
+            self.rand_target = min(12.0, max(-12.0, pick))
+        self.rand_st += (self.rand_target - self.rand_st) * min(1.0, n / (self.RAND_GLIDE * self.sr))
+        st = self.base_pitch + self.rand_st
+        if self.pv:  # phase vocoder voices (Girl, Woman, ...): pitch moves, formants stay
+            self.spectral.pitch_st = st
+        else:
+            self.pitch.ratio = 2 ** (st / 12)
+
     def process(self, x):
         p = self.p
         x = self.gate.process(x)
+        if self.rand_spread > 0.01:
+            self._random_pitch(len(x))
         if self.delay_pitch:
             x = self.pitch.process(x)
         if self.spectral.active:
@@ -643,8 +771,12 @@ class VoiceChain:
             x = self.reverb.process(x, p["reverb_mix"], p["reverb_size"])
         if self.gain != 1.0:
             x = x * F32(self.gain)
+        pan, orbit = p.get("pan", 0), p.get("orbit", 0)
+        if abs(pan) > 1e-3 or orbit > 1e-3:  # voice becomes stereo; layers stay centred
+            x = self.spatial.process(x.astype(F32, copy=False), pan, orbit,
+                                     p.get("orbit_mono", 0) >= 0.5)
         if self.layers is not None and self.layers.active:
             bg = self.layers.process(len(x))
             if bg is not None:
-                x = x + bg
+                x = x + (bg[:, None] if x.ndim == 2 else bg)
         return self.limiter.process(x.astype(F32, copy=False))

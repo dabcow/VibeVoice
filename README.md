@@ -19,10 +19,10 @@ Windows SmartScreen may warn about an unsigned app the first time. Click
 
 ## Features
 
-- **23 built-in voices**: Girl, Woman, Old Man, Robot, Mega Echo, Deep,
+- **27 built-in voices**: Girl, Woman, Old Man, Robot, Mega Echo, Deep,
   Chipmunk, Child, Giant, Demon, Villain, Cyborg, Android, Alien, Radio,
   Telephone, Megaphone, 8-Bit, Cave, Stadium Announcer, Ghost, Underwater,
-  plus Clean.
+  Right Ear, Circular, Circular Mono, Random Pitch, plus Clean.
 - **Natural female voices**: Girl and Woman learn your average speaking pitch
   and move it to a female range (about 270 Hz and 210 Hz). Your natural
   intonation stays the same, so low and high voices both land in the right
@@ -36,15 +36,37 @@ Windows SmartScreen may warn about an unsigned app the first time. Click
 - **Monotone robot** replaces your voice's pitch with a single fixed note, and
   you can set that note with *Robot pitch*. **Tremble** and **Breathiness**
   give the Old Man his shaky, airy voice.
+- **Random Pitch** jumps your voice to a new random pitch every second. Each
+  pick is drawn from a bell curve around your normal pitch. The *Random pitch*
+  slider (Customize → Pitch) sets its standard deviation: 4 semitones in
+  Random Pitch, so most picks land within ±8. The **Voice intensity** slider
+  scales that spread: 50% keeps the jumps small, and 150% makes them wild.
+  *Random interval* sets the timing (0.2–5 s). Turn up *Random pitch* on any
+  voice, such as Woman or Robot, to make it wander too.
 - **Test your voice**: record 5 seconds, then play it back through any voice,
   or play the original to compare. You can keep switching voices on the same clip.
 - **Hear Myself**: live monitoring through your headphones.
+- **Position your voice** (Customize → Position): *Pan* moves your voice
+  between the ears, and the **Right Ear** voice puts it in the right channel
+  only. **Circular** makes your voice orbit around the listener's head ("8D
+  audio"). It uses panning, a tiny delay at the far ear, and muffling behind
+  the head, and is best on headphones. Discord voice channels, most game chat
+  and normal Zoom calls send the mic in mono, so listeners there hear you
+  centred. The full effect comes through in Hear Myself, the voice test, OBS,
+  and Zoom's stereo "Original sound" mode. Background layers stay centred.
+- **Circular Mono** (or *Mono-safe orbit* in Customize → Position) is the
+  orbit for Discord and game chat. Left and right are lost in mono, so it
+  moves your voice by distance: close and clear in front, further away and
+  muffled behind, with a small Doppler pitch bend (about ±25 cents) as it
+  comes and goes. Its two channels always add up to the same signal, so the
+  mono mix has none of the phasey sound the headphone version gets there.
+  On headphones it still circles left and right.
 - **Voice intensity** (Setup tab): one slider scales every voice, from 0% (your
   normal voice) through 100% (the voice as designed) to 150% (exaggerated). It
   turns down the amounts, such as pitch shift, robot, distortion, echo and EQ,
   while keeping each voice's character. Girl at 50% is a gentler Girl, not a
   different voice.
-- **Customize**: 26 controls. Use *Save as new* to keep your own voices. Edits
+- **Customize**: 31 controls. Use *Save as new* to keep your own voices. Edits
   to custom voices save automatically.
 - **Background layers** (Layers tab): stack chaotic backgrounds on top of any
   voice. They play into your mic nonstop, with random timing, so they never loop

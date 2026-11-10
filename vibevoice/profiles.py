@@ -30,6 +30,11 @@ PARAMS = [
     ("bass", "Bass", -12, 12, 0.5, "dB", "Tone"),
     ("treble", "Treble", -12, 12, 0.5, "dB", "Tone"),
     ("gain", "Output gain", -12, 12, 0.5, "dB", "Tone"),
+    ("pan", "Pan (L / R)", -1, 1, 0.05, "", "Position"),
+    ("orbit", "Circular speed", 0, 2, 0.05, "", "Position"),
+    ("orbit_mono", "Mono-safe orbit", 0, 1, 1, "", "Position"),
+    ("pitch_rand", "Random pitch", 0, 12, 0.5, "st", "Pitch"),
+    ("pitch_rand_every", "Random interval", 0.2, 5, 0.1, "s", "Pitch"),
 ]
 
 DEFAULTS = {
@@ -38,7 +43,8 @@ DEFAULTS = {
     "crush_down": 1, "chorus_mix": 0, "chorus_rate": 0.8, "chorus_delay": 12,
     "chorus_depth": 2, "echo_mix": 0, "echo_time": 250, "echo_fb": 0.35,
     "reverb_mix": 0, "reverb_size": 0.6, "low_cut": 20, "high_cut": 20000,
-    "bass": 0, "treble": 0, "gain": 0,
+    "bass": 0, "treble": 0, "gain": 0, "pan": 0, "orbit": 0, "orbit_mono": 0,
+    "pitch_rand": 0, "pitch_rand_every": 1.0,
 }
 
 
@@ -47,7 +53,8 @@ DEFAULTS = {
 # cut-offs move on a log scale; character settings (rates, times, sizes,
 # target pitches) stay put so a gentler voice is still the same voice.
 _CHARACTER = {"ring_freq", "chorus_rate", "chorus_delay", "chorus_depth", "echo_time",
-              "reverb_size", "robot_pitch", "target_f0"}
+              "reverb_size", "robot_pitch", "target_f0", "orbit_mono",
+              "pitch_rand_every"}
 _LOG_SCALE = {"low_cut", "high_cut"}
 _BOUNDS = {key: (lo, hi) for key, _label, lo, hi, *_rest in PARAMS}
 
@@ -118,4 +125,11 @@ BUILTIN = [
          low_cut=250, gain=7),
     make("Underwater", "#0369a1", pitch=-2, high_cut=1200, chorus_mix=0.7,
          chorus_rate=5, chorus_delay=6, chorus_depth=3, reverb_mix=0.2, gain=4),
+    make("Right Ear", "#94a3b8", pan=1.0),
+    make("Circular", "#8b5cf6", orbit=0.2, reverb_mix=0.12, reverb_size=0.5),
+    # for Discord / game chat, which mix the mic to mono: the motion survives as
+    # near-and-bright in front, far-and-muffled behind, plus a Doppler bend
+    make("Circular Mono", "#7c3aed", orbit=0.2, orbit_mono=1, reverb_mix=0.12, reverb_size=0.5),
+    # a new random pitch every second; voice intensity scales the spread (std dev)
+    make("Random Pitch", "#e11d48", pitch_rand=4, pitch_rand_every=1.0),
 ]

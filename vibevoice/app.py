@@ -314,7 +314,8 @@ class VibeVoiceApp:
         inner = sf.inner
         inner.columnconfigure(1, weight=1)
         row, group = 0, None
-        for key, label, lo, hi, res, unit, grp in PARAMS:
+        order = list(dict.fromkeys(r[6] for r in PARAMS))  # sections in first-seen order
+        for key, label, lo, hi, res, unit, grp in sorted(PARAMS, key=lambda r: order.index(r[6])):
             if grp != group:
                 group = grp
                 self._label(inner, grp.upper(), 9, True, fg=ACCENT, bg=CARD).grid(
@@ -458,6 +459,16 @@ class VibeVoiceApp:
     def _fmt(v, unit, res, key=""):
         if key == "target_f0" and v <= 0:
             return "off"
+        if key == "pan":
+            return "centre" if abs(v) < 0.025 else f"{'R' if v > 0 else 'L'} {abs(v) * 100:.0f}%"
+        if key == "orbit":
+            return "off" if v <= 0 else f"{v:.2f}/s ({1 / v:.0f}s lap)"
+        if key == "pitch_rand":
+            return "off" if v <= 0 else f"±{v:.1f} st (std dev)"
+        if key == "pitch_rand_every":
+            return f"{v:.1f} s"
+        if key == "orbit_mono":
+            return "on (Discord, games)" if v >= 0.5 else "off (headphones)"
         s = f"{v:+.1f}" if unit in ("st", "dB") else (f"{v:.0f}" if res >= 1 else f"{v:.2f}")
         return f"{s} {unit}".strip()
 
