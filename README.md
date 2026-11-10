@@ -70,7 +70,7 @@ Windows SmartScreen may warn about an unsigned app the first time. Click
   to custom voices save automatically.
 - **Background layers** (Layers tab): stack chaotic backgrounds on top of any
   voice. They play into your mic nonstop, with random timing, so they never loop
-  the same way twice. All 14 layers use **real recordings**:
+  the same way twice. All 15 layers use **real recordings**:
   - **Zoo**: elephants, lions, chimps, gibbons, sheep, cows, ducks and parrots
   - **Sea**: big waves, seagulls and ship horns from a real harbour
   - **Storm**: heavy rain, strong wind and real thunder strikes
@@ -81,6 +81,9 @@ Windows SmartScreen may warn about an unsigned app the first time. Click
   - **Fast Food Restaurant**: lunch-rush chatter, orders called out, fryer beeps
   - **University Lecture**: a professor lecturing to a full hall
   - **Indian Street Market**: vendors calling out, tuk-tuks and horns
+  - **Hardcore Edit**: heavy drop-D metal riffs at 105 BPM with screams and
+    growls, operatic female vocals, bass drops, risers and trailer hits.
+    The riff track is cut on whole bars, so its loop keeps the beat.
 
   Each layer has its own volume, and there's a master volume. Each layer's
   **Intensity** slider sets how often its sounds fire and how hard they hit,

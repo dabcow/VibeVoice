@@ -36,6 +36,7 @@ LAYERS = [
     ("fastfood", "Fast Food Restaurant", "#facc15", "Lunch rush: chatter, orders called out at the counter, fryer beeps"),
     ("lecture", "University Lecture", "#6366f1", "A professor lecturing to a full hall, with the odd cough"),
     ("india", "Indian Street Market", "#d946ef", "Vendors calling out, tuk-tuks and horns on busy Indian streets"),
+    ("edit", "Hardcore Edit", "#be123c", "Heavy drop-D riffs at 105 BPM with screams, operatic vocals, bass drops and trailer hits"),
 ]
 LAYER_IDS = [lay[0] for lay in LAYERS]
 

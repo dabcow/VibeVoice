@@ -98,3 +98,17 @@ Thank you to every recordist below.
 | space | Nuclear Alarm | radio_illuminati | https://freesound.org/s/206141/ |
 | space | Missile Lock Detected | ryanconway | https://freesound.org/s/165504/ |
 | space | Retro Sci Fi Computer | notKlaatu | https://freesound.org/s/260103/ |
+| edit | Alive105_Dm (heavy metal loop, 105 BPM, drop D) | BaDoink | https://freesound.org/s/570579/ |
+| edit | Male Aggressive Growls | Kodack | https://freesound.org/s/257358/ |
+| edit | fry scream (black metal vocal) | Mundogoth | https://freesound.org/s/450875/ |
+| edit | Male Screams [1] | marc3122 | https://freesound.org/s/556976/ |
+| edit | Breathing Fry Scream | Komickle | https://freesound.org/s/862941/ |
+| edit | Bewitched (Vocal Opera) | younoise | https://freesound.org/s/640745/ |
+| edit | Deep Moonlight Voice | younoise | https://freesound.org/s/690090/ |
+| edit | feminine singing gibberish ethereal melody | buggly | https://freesound.org/s/748553/ |
+| edit | Cinematic Impact | deleted_user_3277771 | https://freesound.org/s/177242/ |
+| edit | Big Boom | unfa | https://freesound.org/s/189779/ |
+| edit | Bass Drop Huge | david_werecat | https://freesound.org/s/231660/ |
+| edit | Trailer Super Hits | gerainsan | https://freesound.org/s/382689/ |
+| edit | Riser sound effect short | syntheffects | https://freesound.org/s/685256/ |
+| edit | Dark Piano Tension | Werra | https://freesound.org/s/231562/ |

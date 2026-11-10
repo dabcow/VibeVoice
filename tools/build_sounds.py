@@ -1,10 +1,11 @@
 """Download and prepare the background-layer recordings.
 
-    python tools/build_sounds.py [download_dir]
+    python tools/build_sounds.py [download_dir] [--only layer ...]
 
 Fetches the public-domain (CC0) Freesound previews listed in SOURCES into
 download_dir (default: build/sound_downloads), then trims, splits, loops,
 levels and encodes them into assets/sounds/ with manifest.json and CREDITS.md.
+With --only, just those layers are rebuilt and merged into the existing manifest.
 Development tool only: needs numpy, scipy and soundfile.
 """
 import json
@@ -145,9 +146,26 @@ SOURCES = {
         (165504, 2698284, "ryanconway", "Missile Lock Detected", None),
         (260103, 1089045, "notKlaatu", "Retro Sci Fi Computer", None),
     ],
+    "edit": [
+        (570579, 2019171, "BaDoink", "Alive105_Dm (heavy metal loop, 105 BPM, drop D)", None),
+        (257358, 2276808, "Kodack", "Male Aggressive Growls", None),
+        (450875, 9379663, "Mundogoth", "fry scream (black metal vocal)", None),
+        (556976, 12497831, "marc3122", "Male Screams [1]", None),
+        (862941, 19068467, "Komickle", "Breathing Fry Scream", None),
+        (640745, 2346185, "younoise", "Bewitched (Vocal Opera)", None),
+        (690090, 2346185, "younoise", "Deep Moonlight Voice", None),
+        (748553, 9088242, "buggly", "feminine singing gibberish ethereal melody", None),
+        (177242, 3277771, "deleted_user_3277771", "Cinematic Impact", None),
+        (189779, 1038806, "unfa", "Big Boom", None),
+        (231660, 4183223, "david_werecat", "Bass Drop Huge", None),
+        (382689, 3577171, "gerainsan", "Trailer Super Hits", None),
+        (685256, 12265588, "syntheffects", "Riser sound effect short", None),
+        (231562, 525427, "Werra", "Dark Piano Tension", None),
+    ],
 }
 
-# role per sound: ("bed", seconds, gain) | ("split", events/min, (glo, ghi), max_variants, max_len)
+# role per sound: ("bed", seconds, gain) | ("loop", max seconds, gain): music, beat-matched
+# | ("split", events/min, (glo, ghi), max_variants, max_len)
 # | ("chunks", events/min, (glo, ghi), n_chunks, chunk_len) | ("whole", events/min, (glo, ghi), max_len)
 SPEC = {
     "smoke": {819808: ("whole", 6, (0.5, 0.8), 3), 819807: ("whole", 5, (0.3, 0.5), 3),
@@ -199,6 +217,14 @@ SPEC = {
               235968: ("whole", 3, (0.5, 0.8), 8), 97896: ("whole", 2, (0.5, 0.8), 15),
               206141: ("chunks", 1, (0.25, 0.4), 2, 8), 165504: ("whole", 1, (0.4, 0.6), 18),
               260103: ("whole", 3, (0.3, 0.5), 6)},
+    "edit": {570579: ("loop", 56, 1.0),  # the music leads; vocals and hits sit on top
+             257358: ("split", 4, (0.2, 0.35), 6, 4), 450875: ("whole", 2, (0.2, 0.35), 6),
+             556976: ("split", 3, (0.2, 0.35), 5, 4), 862941: ("whole", 1.5, (0.2, 0.3), 6),
+             640745: ("whole", 1.5, (0.15, 0.25), 8), 690090: ("chunks", 1, (0.15, 0.25), 2, 8),
+             748553: ("chunks", 1, (0.15, 0.25), 2, 7),
+             177242: ("whole", 1.5, (0.2, 0.35), 8), 189779: ("whole", 1, (0.2, 0.3), 10),
+             231660: ("whole", 1.5, (0.2, 0.3), 7), 382689: ("split", 2, (0.2, 0.35), 5, 6),
+             685256: ("whole", 1, (0.15, 0.25), 3), 231562: ("whole", 0.8, (0.15, 0.25), 14)},
 }
 
 
@@ -302,6 +328,58 @@ def bed(x, seconds):
     return body / (np.sqrt(np.mean(body ** 2)) + 1e-12) * 0.1  # -20 dBFS RMS
 
 
+def _onsets(x, hop=256, n=2048):
+    """Spectral-flux onset strength (frames per second = SR / hop)."""
+    frames = np.lib.stride_tricks.sliding_window_view(x, n)[::hop] * np.hanning(n)
+    S = np.log1p(100 * np.abs(np.fft.rfft(frames, axis=1)))
+    flux = np.maximum(np.diff(S, axis=0), 0).sum(axis=1)
+    return np.maximum(flux - np.convolve(flux, np.ones(43) / 43, "same"), 0)
+
+
+def _corr(a, b):
+    a, b = a - a.mean(), b - b.mean()
+    return float(np.dot(a, b) / (np.sqrt(np.dot(a, a) * np.dot(b, b)) + 1e-12))
+
+
+def music_loop(x, max_seconds, min_seconds=30):
+    """Loop a piece of music without breaking the beat. Finds the tempo, then the
+    start and the whole number of bars (up to max_seconds) where the music lines
+    up best with itself, and joins the seam with a 40 ms cross-fade. Among
+    near-equal matches the longest loop wins. No slow leveling, so the music
+    keeps its dynamics."""
+    hop = 256
+    fps = SR / hop
+    flux = _onsets(x, hop)
+    # beat period: strongest onset self-similarity between 60 and 200 BPM
+    lags = np.arange(int(fps * 60 / 200), int(fps * 60 / 60) + 1)
+    beat = lags[int(np.argmax([_corr(flux[:-L], flux[L:]) for L in lags]))] / fps
+    lag = np.arange(beat * 0.97, beat * 1.03, 1 / (4 * fps))  # sub-frame refinement
+    beat = lag[int(np.argmax([_corr(flux[:-int(4 * t * fps)], flux[int(4 * t * fps):]) for t in lag]))]
+    bar, W = 4 * beat, int(6 * fps)
+    cands = []
+    for k in range(int(np.ceil(min_seconds / bar)), int(max_seconds / bar) + 1):
+        for dL in range(-6, 7):
+            L = int(round(k * bar * fps)) + dL
+            for a in range(0, int(12 * fps), 2):
+                if a + L + W > len(flux):
+                    break
+                cands.append((_corr(flux[a:a + W], flux[a + L:a + L + W]), L, a))
+    top = max(c[0] for c in cands)
+    c, L, a = max((c for c in cands if c[0] >= top - 0.02), key=lambda c: (c[1], c[0]))
+    s0, L = a * hop, L * hop
+    R = int(0.1 * SR)  # sample-accurate seam: best waveform match within one hop
+    d = max(range(-hop, hop + 1), key=lambda d: float(np.dot(x[s0:s0 + R], x[s0 + L + d:s0 + L + d + R])))
+    L += d
+    f = int(0.04 * SR)
+    body = x[s0:s0 + L].copy()
+    w = np.sin(np.linspace(0, np.pi / 2, f)) ** 2
+    body[:f] = x[s0:s0 + f] * w + x[s0 + L:s0 + L + f] * (1 - w)
+    print(f"    {60 / beat:.1f} BPM; loop {L / SR:.2f}s = {L / SR / bar:.2f} bars from {s0 / SR:.2f}s, "
+          f"onset match {c:.2f} (best {top:.2f})")
+    body = body / (np.sqrt(np.mean(body ** 2)) + 1e-12) * 0.1  # -20 dBFS RMS
+    return 0.5 * np.tanh(body / 0.5)  # gentle ceiling for the loudest hits
+
+
 def peaknorm(x, peak=0.89):
     return x * (peak / (np.max(np.abs(x)) + 1e-12))
 
@@ -314,9 +392,14 @@ def write(path, x):
             f.write(x[i:i + 8192].astype(np.float32))
 
 
-def process(DL, OUT):
-    manifest, credits, total = {}, [], 0
+def process(DL, OUT, only=None):
+    manifest, total = {}, 0
+    if only:  # rebuild just these layers, keep the rest as they are
+        with open(os.path.join(OUT, "manifest.json"), encoding="utf-8") as f:
+            manifest = json.load(f)
     for layer, items in SOURCES.items():
+        if only and layer not in only:
+            continue
         os.makedirs(os.path.join(OUT, layer), exist_ok=True)
         entry = {"beds": [], "events": []}
         for sid, uid, author, title, _cap in items:
@@ -330,8 +413,8 @@ def process(DL, OUT):
                 print(f"!! {layer}/{sid}: cannot decode ({ex})")
                 continue
             dur = len(x) / SR
-            if role[0] == "bed":
-                clip = bed(x, role[1])
+            if role[0] in ("bed", "loop"):
+                clip = bed(x, role[1]) if role[0] == "bed" else music_loop(x, role[1])
                 name = f"{layer}/bed_{sid}.ogg"
                 write(os.path.join(OUT, name), clip)
                 entry["beds"].append({"file": name, "gain": role[2]})
@@ -354,8 +437,9 @@ def process(DL, OUT):
             total += size
             print(f"{layer:12s} {sid:>7} {role[0]:6s} src {dur:6.1f}s -> {len(files)} file(s) "
                   f"{sum(sf.info(os.path.join(OUT, f)).duration for f in files):6.1f}s {size / 1e3:6.0f} kB  {title[:40]}")
-            credits.append((layer, sid, author, title))
         manifest[layer] = entry
+    credits = [(layer, sid, author, title) for layer, items in SOURCES.items()
+               for sid, _uid, author, title, _cap in items if sid in SPEC[layer]]
 
     with open(os.path.join(OUT, "manifest.json"), "w", encoding="utf-8") as f:
         json.dump(manifest, f, indent=1)
@@ -370,8 +454,10 @@ def process(DL, OUT):
 
 
 
-def download(dl):
+def download(dl, only=None):
     for layer, items in SOURCES.items():
+        if only and layer not in only:
+            continue
         os.makedirs(os.path.join(dl, layer), exist_ok=True)
         for sid, uid, _author, _title, cap in items:
             path = os.path.join(dl, layer, f"{sid}.mp3")
@@ -386,8 +472,11 @@ def download(dl):
 
 
 if __name__ == "__main__":
-    dl = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, "build", "sound_downloads")
+    args = sys.argv[1:]
+    only = args[args.index("--only") + 1:] if "--only" in args else None
+    args = args[:args.index("--only")] if "--only" in args else args
+    dl = args[0] if args else os.path.join(ROOT, "build", "sound_downloads")
     out = os.path.join(ROOT, "assets", "sounds")
-    download(dl)
+    download(dl, only)
     os.makedirs(out, exist_ok=True)
-    process(dl, out)
+    process(dl, out, only)

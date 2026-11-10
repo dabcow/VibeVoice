@@ -1032,5 +1032,171 @@
     ]
    }
   ]
+ },
+ "edit": {
+  "beds": [
+   {
+    "file": "edit/bed_570579.ogg",
+    "gain": 1.0
+   }
+  ],
+  "events": [
+   {
+    "name": "Male Aggressive Growls",
+    "files": [
+     "edit/257358_0.ogg",
+     "edit/257358_1.ogg",
+     "edit/257358_2.ogg",
+     "edit/257358_3.ogg",
+     "edit/257358_4.ogg",
+     "edit/257358_5.ogg"
+    ],
+    "rate": 4,
+    "gain": [
+     0.2,
+     0.35
+    ]
+   },
+   {
+    "name": "fry scream (black metal vocal)",
+    "files": [
+     "edit/450875_0.ogg"
+    ],
+    "rate": 2,
+    "gain": [
+     0.2,
+     0.35
+    ]
+   },
+   {
+    "name": "Male Screams [1]",
+    "files": [
+     "edit/556976_0.ogg",
+     "edit/556976_1.ogg",
+     "edit/556976_2.ogg",
+     "edit/556976_3.ogg",
+     "edit/556976_4.ogg"
+    ],
+    "rate": 3,
+    "gain": [
+     0.2,
+     0.35
+    ]
+   },
+   {
+    "name": "Breathing Fry Scream",
+    "files": [
+     "edit/862941_0.ogg"
+    ],
+    "rate": 1.5,
+    "gain": [
+     0.2,
+     0.3
+    ]
+   },
+   {
+    "name": "Bewitched (Vocal Opera)",
+    "files": [
+     "edit/640745_0.ogg"
+    ],
+    "rate": 1.5,
+    "gain": [
+     0.15,
+     0.25
+    ]
+   },
+   {
+    "name": "Deep Moonlight Voice",
+    "files": [
+     "edit/690090_0.ogg",
+     "edit/690090_1.ogg"
+    ],
+    "rate": 1,
+    "gain": [
+     0.15,
+     0.25
+    ]
+   },
+   {
+    "name": "feminine singing gibberish ethereal melody",
+    "files": [
+     "edit/748553_0.ogg",
+     "edit/748553_1.ogg"
+    ],
+    "rate": 1,
+    "gain": [
+     0.15,
+     0.25
+    ]
+   },
+   {
+    "name": "Cinematic Impact",
+    "files": [
+     "edit/177242_0.ogg"
+    ],
+    "rate": 1.5,
+    "gain": [
+     0.2,
+     0.35
+    ]
+   },
+   {
+    "name": "Big Boom",
+    "files": [
+     "edit/189779_0.ogg"
+    ],
+    "rate": 1,
+    "gain": [
+     0.2,
+     0.3
+    ]
+   },
+   {
+    "name": "Bass Drop Huge",
+    "files": [
+     "edit/231660_0.ogg"
+    ],
+    "rate": 1.5,
+    "gain": [
+     0.2,
+     0.3
+    ]
+   },
+   {
+    "name": "Trailer Super Hits",
+    "files": [
+     "edit/382689_0.ogg",
+     "edit/382689_1.ogg",
+     "edit/382689_2.ogg"
+    ],
+    "rate": 2,
+    "gain": [
+     0.2,
+     0.35
+    ]
+   },
+   {
+    "name": "Riser sound effect short",
+    "files": [
+     "edit/685256_0.ogg"
+    ],
+    "rate": 1,
+    "gain": [
+     0.15,
+     0.25
+    ]
+   },
+   {
+    "name": "Dark Piano Tension",
+    "files": [
+     "edit/231562_0.ogg"
+    ],
+    "rate": 0.8,
+    "gain": [
+     0.15,
+     0.25
+    ]
+   }
+  ]
  }
 }
