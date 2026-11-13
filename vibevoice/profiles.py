@@ -35,6 +35,9 @@ PARAMS = [
     ("orbit_mono", "Mono-safe orbit", 0, 1, 1, "", "Position"),
     ("pitch_rand", "Random pitch", 0, 12, 0.5, "st", "Pitch"),
     ("pitch_rand_every", "Random interval", 0.2, 5, 0.1, "s", "Pitch"),
+    ("curve_depth", "Speech curve", -12, 12, 0.5, "st", "Pitch"),
+    ("curve_time", "Curve length", 0.5, 10, 0.1, "s", "Pitch"),
+    ("curve_shape", "Curve shape", 0, 5, 1, "", "Pitch"),
 ]
 
 DEFAULTS = {
@@ -45,6 +48,7 @@ DEFAULTS = {
     "reverb_mix": 0, "reverb_size": 0.6, "low_cut": 20, "high_cut": 20000,
     "bass": 0, "treble": 0, "gain": 0, "pan": 0, "orbit": 0, "orbit_mono": 0,
     "pitch_rand": 0, "pitch_rand_every": 1.0,
+    "curve_depth": 0, "curve_time": 3.0, "curve_shape": 0,
 }
 
 
@@ -54,7 +58,7 @@ DEFAULTS = {
 # target pitches) stay put so a gentler voice is still the same voice.
 _CHARACTER = {"ring_freq", "chorus_rate", "chorus_delay", "chorus_depth", "echo_time",
               "reverb_size", "robot_pitch", "target_f0", "orbit_mono",
-              "pitch_rand_every"}
+              "pitch_rand_every", "curve_time", "curve_shape"}
 _LOG_SCALE = {"low_cut", "high_cut"}
 _BOUNDS = {key: (lo, hi) for key, _label, lo, hi, *_rest in PARAMS}
 
@@ -132,4 +136,53 @@ BUILTIN = [
     make("Circular Mono", "#7c3aed", orbit=0.2, orbit_mono=1, reverb_mix=0.12, reverb_size=0.5),
     # a new random pitch every second; voice intensity scales the spread (std dev)
     make("Random Pitch", "#e11d48", pitch_rand=4, pitch_rand_every=1.0),
+    # pitch climbs while you keep talking (+8 st over 4 s), drops back when you pause
+    make("Speech Curve", "#f97316", curve_depth=8, curve_time=4.0, curve_shape=0),
 ]
+
+
+# ---- several voices at once (Select multiple) ---------------------------------------
+# How each parameter combines when voices are stacked: offsets add up, effect amounts
+# and output gain take the strongest (so make-up gains don't pile up), filters take the
+# narrowest, and each effect's own settings (rate, time, room size, ...) come from the
+# voice that uses that effect the most.
+CURVE_SHAPES = ("Linear", "Ease in", "Ease out", "S-curve", "Steps", "Rise & fall")  # curve_shape 0-5
+
+_SUM = ("pitch", "formant", "bass", "treble", "pan")
+_MAX = ("gain", "tremble", "robot_mix", "breath", "ring_mix", "drive", "chorus_mix", "echo_mix",
+        "echo_fb", "reverb_mix", "orbit", "orbit_mono", "pitch_rand", "crush_down", "low_cut")
+_MIN = ("high_cut", "crush_bits")
+_OWNED = {"ring_freq": "ring_mix", "chorus_rate": "chorus_mix", "chorus_delay": "chorus_mix",
+          "chorus_depth": "chorus_mix", "echo_time": "echo_mix", "reverb_size": "reverb_mix",
+          "robot_pitch": "robot_mix", "pitch_rand_every": "pitch_rand",
+          "curve_time": "curve_depth", "curve_shape": "curve_depth"}
+
+
+def merge_profiles(param_sets):
+    """One set of parameters that stacks several voices (in the given order)."""
+    sets = [dict(DEFAULTS, **ps) for ps in param_sets]
+    if not sets:
+        return dict(DEFAULTS)
+    if len(sets) == 1:
+        return sets[0]
+    out = {}
+    for key, d in DEFAULTS.items():
+        vals = [ps[key] for ps in sets]
+        if key in _SUM:
+            v = d + sum(x - d for x in vals)
+        elif key in _MAX:
+            v = max(vals)
+        elif key in _MIN:
+            v = min(vals)
+        elif key == "target_f0":  # the first voice that aims at a pitch
+            v = next((x for x in vals if x > 0), 0)
+        elif key == "curve_depth":  # the strongest curve, up or down
+            v = max(vals, key=abs)
+        else:
+            v = d
+        lo, hi = _BOUNDS[key]
+        out[key] = min(hi, max(lo, v))
+    for key, owner in _OWNED.items():
+        boss = max(sets, key=lambda ps: abs(ps[owner] - DEFAULTS[owner]))
+        out[key] = boss[key]
+    return out

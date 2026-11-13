@@ -19,10 +19,10 @@ Windows SmartScreen may warn about an unsigned app the first time. Click
 
 ## Features
 
-- **27 built-in voices**: Girl, Woman, Old Man, Robot, Mega Echo, Deep,
+- **28 built-in voices**: Girl, Woman, Old Man, Robot, Mega Echo, Deep,
   Chipmunk, Child, Giant, Demon, Villain, Cyborg, Android, Alien, Radio,
   Telephone, Megaphone, 8-Bit, Cave, Stadium Announcer, Ghost, Underwater,
-  Right Ear, Circular, Circular Mono, Random Pitch, plus Clean.
+  Right Ear, Circular, Circular Mono, Random Pitch, Speech Curve, plus Clean.
 - **Natural female voices**: Girl and Woman learn your average speaking pitch
   and move it to a female range (about 270 Hz and 210 Hz). Your natural
   intonation stays the same, so low and high voices both land in the right
@@ -43,6 +43,19 @@ Windows SmartScreen may warn about an unsigned app the first time. Click
   scales that spread: 50% keeps the jumps small, and 150% makes them wild.
   *Random interval* sets the timing (0.2–5 s). Turn up *Random pitch* on any
   voice, such as Woman or Robot, to make it wander too.
+- **Speech Curve** bends your pitch along a curve for as long as you keep
+  talking, then drops back to normal when you pause for half a second. In
+  Customize → Pitch:
+  - *Speech curve* sets how far it goes. Speech Curve climbs to +8 semitones;
+    a negative value sinks instead.
+  - *Curve length* sets how long it takes to get there (0.5–10 s). After that
+    it holds until you pause.
+  - *Curve shape* picks the curve: Linear, Ease in (slow, then fast), Ease out
+    (fast, then slow), S-curve, Steps (four jumps) or Rise & fall (up and back
+    down).
+
+  Speech is detected 6 dB above the Noise gate setting, so set the gate just
+  above your room noise. Voice intensity scales the depth.
 - **Test your voice**: record 5 seconds, then play it back through any voice,
   or play the original to compare. You can keep switching voices on the same clip.
 - **Hear Myself**: live monitoring through your headphones.
@@ -61,16 +74,23 @@ Windows SmartScreen may warn about an unsigned app the first time. Click
   comes and goes. Its two channels always add up to the same signal, so the
   mono mix has none of the phasey sound the headphone version gets there.
   On headphones it still circles left and right.
+- **Select multiple** (top bar, next to VOICE ON): each voice card gets a
+  checkbox, and every voice you tick plays at the same time as one combined
+  voice, such as Girl + Robot + Mega Echo. Pitch and EQ shifts add up, and for
+  each effect the strongest setting wins, so it costs no more CPU than a single
+  voice. Customize edits the voice you clicked last. Ctrl+Alt+1–9 tick and
+  untick voices. *Save as new* saves the whole mix as one voice, and *Share*
+  gives one code for it.
 - **Voice intensity** (Setup tab): one slider scales every voice, from 0% (your
   normal voice) through 100% (the voice as designed) to 150% (exaggerated). It
   turns down the amounts, such as pitch shift, robot, distortion, echo and EQ,
   while keeping each voice's character. Girl at 50% is a gentler Girl, not a
   different voice.
-- **Customize**: 31 controls. Use *Save as new* to keep your own voices. Edits
+- **Customize**: 34 controls. Use *Save as new* to keep your own voices. Edits
   to custom voices save automatically.
 - **Background layers** (Layers tab): stack chaotic backgrounds on top of any
   voice. They play into your mic nonstop, with random timing, so they never loop
-  the same way twice. All 15 layers use **real recordings**:
+  the same way twice. All 18 layers use **real recordings**:
   - **Zoo**: elephants, lions, chimps, gibbons, sheep, cows, ducks and parrots
   - **Sea**: big waves, seagulls and ship horns from a real harbour
   - **Storm**: heavy rain, strong wind and real thunder strikes
@@ -84,6 +104,15 @@ Windows SmartScreen may warn about an unsigned app the first time. Click
   - **Hardcore Edit**: heavy drop-D metal riffs at 105 BPM with screams and
     growls, operatic female vocals, bass drops, risers and trailer hits.
     The riff track is cut on whole bars, so its loop keeps the beat.
+  - **Footsteps**: people walking and running past on pavement, gravel,
+    stairs and wooden floors, plus heels in a hallway
+  - **Tactical Shooter**: rifle and pistol fire, planted-bomb beeps,
+    explosions, reloads, footsteps on metal and ability whooshes. It's in
+    the style of games like Valorant, built from real recordings and
+    sound-design effects, not any game's own audio.
+  - **Parents Fighting**: a heated argument in the next room, with shouting,
+    door slams, drawers, pots and pans and a smashed dish. Everything is
+    muffled as if heard through a wall. The lines are acted, not real fights.
 
   Each layer has its own volume, and there's a master volume. Each layer's
   **Intensity** slider sets how often its sounds fire and how hard they hit,

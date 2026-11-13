@@ -162,6 +162,52 @@ SOURCES = {
         (685256, 12265588, "syntheffects", "Riser sound effect short", None),
         (231562, 525427, "Werra", "Dark Piano Tension", None),
     ],
+    "footsteps": [
+        (438176, 2524442, "craigsmith", "G17-30 Pedestrian Footsteps on Pavement", None),
+        (455812, 612689, "kyles", "metro subway medium crowd busy footsteps echo, Montreal", None),
+        (368834, 6790631, "georgisound", "Footsteps_Hallway (clicking heels)", None),
+        (155858, 179538, "RutgerMuller", "Footsteps in Factory Hall on Wood and Concrete", None),
+        (352870, 4187409, "PotatokingXII", "Footsteps Dirt Gravel", None),
+        (553902, 2397507, "itinerantmonk108", "walk and run up stairs", None),
+        (170501, 1480854, "SpliceSound", "Footsteps, Tile, Male Tennis Shoes, Fast Pace", None),
+        (32939, 43834, "moxobna", "running (down a wooden hall)", None),
+        (134991, 2465309, "zombiechaser3", "running sounds", None),
+        (361072, 6590186, "Topschool", "FastRunning", None),
+    ],
+    "shooter": [
+        (817225, 9250976, "Nox_Sound", "Atmosphere_Scifi_Bunker_Loop_Stereo", None),
+        (617518, 2639035, "neilraouf", "Tension Ambience", None),
+        (259758, 4121395, "mnslugger20", "M4 Assault rifle firing", None),
+        (402791, 7111288, "acidsnowflake", "AK47 and various other gunshots at indoor shooting range", None),
+        (201668, 3749344, "Franki-01234", "M16 burst in street", None),
+        (427592, 3094998, "michorvath", "9mm pistol shot", None),
+        (33942, 298165, "scarbelly25", "Timebombbeep", None),
+        (138108, 1572282, "snakebarney", "Bomb Countdown Beeps", None),
+        (516914, 2247456, "Kinoton", "Explosion, Medium Blast", None),
+        (182429, 71257, "qubodup", "Explosion", None),
+        (398937, 5993580, "SoftDistortionFX", "Metal Footsteps (metal grate)", None),
+        (256912, 2276808, "Kodack", "Assault Rifle Reload", None),
+        (348155, 6362703, "GreenFireSound", "Pistol Manipulation 01", None),
+        (400908, 2309965, "Alex_hears_things", "Sci Fi Wooshes_variations", None),
+        (735062, 8908475, "GammaGool", "Fast Warp In", None),
+    ],
+    "argument": [
+        (23226, 42670, "Schulze", "Quarreling old couple (synth imitation)", None),
+        (725706, 14787385, "mglennsound", "Exp_Upset Crowd Talking_Loop_03", None),
+        (653473, 9088242, "buggly", "\"we're in the middle of dinner, can we not discuss this?\"", None),
+        (527737, 6652872, "khenshom", "Angry frustrated and disappointed - Male - Various", None),
+        (491831, 9238174, "HidroLion", "51-Voz_Enojada-glued (angry man talking)", None),
+        (595815, 12467243, "vibritherabjit123", "UGHHH!! I hate you", None),
+        (613987, 2833408, "vikuserro", "Mad Husband (gibberish)", None),
+        (873701, 15115102, "riippumattog", "thats enough turn the lights off", None),
+        (559642, 11464399, "SuddenDice", "AS000834_indignation (female, wordless)", None),
+        (174643, 3015949, "altfuture", "Door Slammed", None),
+        (40158, 43834, "moxobna", "crash (angry fit, audioplay)", None),
+        (186363, 167260, "ragamuffin", "pottery-dish-smash-4x-samples", None),
+        (133486, 2394357, "reg7783", "falling pots and pans", None),
+        (320610, 70811, "petersrin", "Kitchen Ransack (drawers slammed)", None),
+        (37801, 43834, "moxobna", "packing (suitcase, fast and angry)", None),
+    ],
 }
 
 # role per sound: ("bed", seconds, gain) | ("loop", max seconds, gain): music, beat-matched
@@ -225,7 +271,39 @@ SPEC = {
              177242: ("whole", 1.5, (0.2, 0.35), 8), 189779: ("whole", 1, (0.2, 0.3), 10),
              231660: ("whole", 1.5, (0.2, 0.3), 7), 382689: ("split", 2, (0.2, 0.35), 5, 6),
              685256: ("whole", 1, (0.15, 0.25), 3), 231562: ("whole", 0.8, (0.15, 0.25), 14)},
+    "footsteps": {438176: ("bed", 38, 1.0), 455812: ("bed", 75, 0.6),
+                  368834: ("chunks", 3, (0.3, 0.6), 4, 5), 155858: ("chunks", 2, (0.3, 0.6), 4, 6),
+                  352870: ("chunks", 2, (0.3, 0.6), 3, 5), 553902: ("chunks", 2, (0.3, 0.5), 4, 6),
+                  170501: ("chunks", 3, (0.3, 0.5), 3, 5), 32939: ("whole", 2, (0.4, 0.7), 8),
+                  134991: ("chunks", 2, (0.3, 0.6), 4, 5), 361072: ("whole", 1.5, (0.3, 0.6), 7)},
+    "shooter": {817225: ("bed", 54, 1.0), 617518: ("bed", 75, 0.35),
+                259758: ("split", 3, (0.3, 0.6), 5, 2.5), 402791: ("split", 3, (0.3, 0.6), 8, 3),
+                201668: ("whole", 1.5, (0.3, 0.6), 3), 427592: ("whole", 2, (0.3, 0.6), 1.5),
+                33942: ("whole", 0.8, (0.25, 0.4), 5), 138108: ("whole", 0.8, (0.25, 0.4), 2),
+                516914: ("whole", 0.8, (0.4, 0.7), 5), 182429: ("whole", 0.7, (0.4, 0.7), 3),
+                398937: ("chunks", 2, (0.2, 0.4), 4, 5), 256912: ("whole", 1.5, (0.2, 0.4), 3.5),
+                348155: ("split", 1.5, (0.2, 0.4), 3, 1.5), 400908: ("split", 1.5, (0.2, 0.4), 5, 4),
+                735062: ("whole", 1, (0.2, 0.4), 1.2)},
+    "argument": {23226: ("bed", 33, 0.6), 725706: ("bed", 49, 0.35),
+                 653473: ("split", 2, (0.4, 0.7), 6, 6), 527737: ("split", 2.5, (0.4, 0.7), 8, 3),
+                 491831: ("whole", 1.5, (0.4, 0.7), 8), 595815: ("split", 1.5, (0.4, 0.6), 3, 3),
+                 613987: ("whole", 1.5, (0.4, 0.7), 4), 873701: ("split", 1, (0.4, 0.6), 3, 2.5),
+                 559642: ("split", 1, (0.3, 0.5), 4, 1.5),
+                 174643: ("split", 1.5, (0.4, 0.7), 4, 2), 40158: ("whole", 1, (0.3, 0.5), 4),
+                 186363: ("split", 1, (0.3, 0.6), 4, 2.5), 133486: ("split", 1.5, (0.3, 0.6), 6, 3),
+                 320610: ("split", 2, (0.3, 0.5), 6, 2), 37801: ("chunks", 1, (0.2, 0.35), 4, 8)},
 }
+
+# layers heard through a wall: every sound gets this low-pass (Hz)
+MUFFLE = {"argument": 3200}
+
+
+def muffle(x, cutoff):
+    """Gentle low-pass (zero phase, 12 dB/octave above cutoff): 'in the next room'."""
+    X = np.fft.rfft(x)
+    f = np.fft.rfftfreq(len(x), 1 / SR)
+    X /= 1.0 + (f / cutoff) ** 2
+    return np.fft.irfft(X, len(x))
 
 
 def load(path):
@@ -413,6 +491,8 @@ def process(DL, OUT, only=None):
                 print(f"!! {layer}/{sid}: cannot decode ({ex})")
                 continue
             dur = len(x) / SR
+            if layer in MUFFLE:
+                x = muffle(x, MUFFLE[layer])
             if role[0] in ("bed", "loop"):
                 clip = bed(x, role[1]) if role[0] == "bed" else music_loop(x, role[1])
                 name = f"{layer}/bed_{sid}.ogg"

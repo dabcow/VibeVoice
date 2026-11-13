@@ -1198,5 +1198,495 @@
     ]
    }
   ]
+ },
+ "footsteps": {
+  "beds": [
+   {
+    "file": "footsteps/bed_438176.ogg",
+    "gain": 1.0
+   },
+   {
+    "file": "footsteps/bed_455812.ogg",
+    "gain": 0.6
+   }
+  ],
+  "events": [
+   {
+    "name": "Footsteps_Hallway (clicking heels)",
+    "files": [
+     "footsteps/368834_0.ogg",
+     "footsteps/368834_1.ogg",
+     "footsteps/368834_2.ogg",
+     "footsteps/368834_3.ogg"
+    ],
+    "rate": 3,
+    "gain": [
+     0.3,
+     0.6
+    ]
+   },
+   {
+    "name": "Footsteps in Factory Hall on Wood and Concrete",
+    "files": [
+     "footsteps/155858_0.ogg",
+     "footsteps/155858_1.ogg",
+     "footsteps/155858_2.ogg",
+     "footsteps/155858_3.ogg"
+    ],
+    "rate": 2,
+    "gain": [
+     0.3,
+     0.6
+    ]
+   },
+   {
+    "name": "Footsteps Dirt Gravel",
+    "files": [
+     "footsteps/352870_0.ogg",
+     "footsteps/352870_1.ogg",
+     "footsteps/352870_2.ogg"
+    ],
+    "rate": 2,
+    "gain": [
+     0.3,
+     0.6
+    ]
+   },
+   {
+    "name": "walk and run up stairs",
+    "files": [
+     "footsteps/553902_0.ogg",
+     "footsteps/553902_1.ogg",
+     "footsteps/553902_2.ogg",
+     "footsteps/553902_3.ogg"
+    ],
+    "rate": 2,
+    "gain": [
+     0.3,
+     0.5
+    ]
+   },
+   {
+    "name": "Footsteps, Tile, Male Tennis Shoes, Fast Pace",
+    "files": [
+     "footsteps/170501_0.ogg",
+     "footsteps/170501_1.ogg",
+     "footsteps/170501_2.ogg"
+    ],
+    "rate": 3,
+    "gain": [
+     0.3,
+     0.5
+    ]
+   },
+   {
+    "name": "running (down a wooden hall)",
+    "files": [
+     "footsteps/32939_0.ogg"
+    ],
+    "rate": 2,
+    "gain": [
+     0.4,
+     0.7
+    ]
+   },
+   {
+    "name": "running sounds",
+    "files": [
+     "footsteps/134991_0.ogg",
+     "footsteps/134991_1.ogg",
+     "footsteps/134991_2.ogg",
+     "footsteps/134991_3.ogg"
+    ],
+    "rate": 2,
+    "gain": [
+     0.3,
+     0.6
+    ]
+   },
+   {
+    "name": "FastRunning",
+    "files": [
+     "footsteps/361072_0.ogg"
+    ],
+    "rate": 1.5,
+    "gain": [
+     0.3,
+     0.6
+    ]
+   }
+  ]
+ },
+ "shooter": {
+  "beds": [
+   {
+    "file": "shooter/bed_817225.ogg",
+    "gain": 1.0
+   },
+   {
+    "file": "shooter/bed_617518.ogg",
+    "gain": 0.35
+   }
+  ],
+  "events": [
+   {
+    "name": "M4 Assault rifle firing",
+    "files": [
+     "shooter/259758_0.ogg",
+     "shooter/259758_1.ogg",
+     "shooter/259758_2.ogg",
+     "shooter/259758_3.ogg",
+     "shooter/259758_4.ogg"
+    ],
+    "rate": 3,
+    "gain": [
+     0.3,
+     0.6
+    ]
+   },
+   {
+    "name": "AK47 and various other gunshots at indoor shooting range",
+    "files": [
+     "shooter/402791_0.ogg",
+     "shooter/402791_1.ogg",
+     "shooter/402791_2.ogg",
+     "shooter/402791_3.ogg",
+     "shooter/402791_4.ogg",
+     "shooter/402791_5.ogg",
+     "shooter/402791_6.ogg",
+     "shooter/402791_7.ogg"
+    ],
+    "rate": 3,
+    "gain": [
+     0.3,
+     0.6
+    ]
+   },
+   {
+    "name": "M16 burst in street",
+    "files": [
+     "shooter/201668_0.ogg"
+    ],
+    "rate": 1.5,
+    "gain": [
+     0.3,
+     0.6
+    ]
+   },
+   {
+    "name": "9mm pistol shot",
+    "files": [
+     "shooter/427592_0.ogg"
+    ],
+    "rate": 2,
+    "gain": [
+     0.3,
+     0.6
+    ]
+   },
+   {
+    "name": "Timebombbeep",
+    "files": [
+     "shooter/33942_0.ogg"
+    ],
+    "rate": 0.8,
+    "gain": [
+     0.25,
+     0.4
+    ]
+   },
+   {
+    "name": "Bomb Countdown Beeps",
+    "files": [
+     "shooter/138108_0.ogg"
+    ],
+    "rate": 0.8,
+    "gain": [
+     0.25,
+     0.4
+    ]
+   },
+   {
+    "name": "Explosion, Medium Blast",
+    "files": [
+     "shooter/516914_0.ogg"
+    ],
+    "rate": 0.8,
+    "gain": [
+     0.4,
+     0.7
+    ]
+   },
+   {
+    "name": "Explosion",
+    "files": [
+     "shooter/182429_0.ogg"
+    ],
+    "rate": 0.7,
+    "gain": [
+     0.4,
+     0.7
+    ]
+   },
+   {
+    "name": "Metal Footsteps (metal grate)",
+    "files": [
+     "shooter/398937_0.ogg",
+     "shooter/398937_1.ogg",
+     "shooter/398937_2.ogg",
+     "shooter/398937_3.ogg"
+    ],
+    "rate": 2,
+    "gain": [
+     0.2,
+     0.4
+    ]
+   },
+   {
+    "name": "Assault Rifle Reload",
+    "files": [
+     "shooter/256912_0.ogg"
+    ],
+    "rate": 1.5,
+    "gain": [
+     0.2,
+     0.4
+    ]
+   },
+   {
+    "name": "Pistol Manipulation 01",
+    "files": [
+     "shooter/348155_0.ogg",
+     "shooter/348155_1.ogg",
+     "shooter/348155_2.ogg"
+    ],
+    "rate": 1.5,
+    "gain": [
+     0.2,
+     0.4
+    ]
+   },
+   {
+    "name": "Sci Fi Wooshes_variations",
+    "files": [
+     "shooter/400908_0.ogg",
+     "shooter/400908_1.ogg",
+     "shooter/400908_2.ogg",
+     "shooter/400908_3.ogg",
+     "shooter/400908_4.ogg"
+    ],
+    "rate": 1.5,
+    "gain": [
+     0.2,
+     0.4
+    ]
+   },
+   {
+    "name": "Fast Warp In",
+    "files": [
+     "shooter/735062_0.ogg"
+    ],
+    "rate": 1,
+    "gain": [
+     0.2,
+     0.4
+    ]
+   }
+  ]
+ },
+ "argument": {
+  "beds": [
+   {
+    "file": "argument/bed_23226.ogg",
+    "gain": 0.6
+   },
+   {
+    "file": "argument/bed_725706.ogg",
+    "gain": 0.35
+   }
+  ],
+  "events": [
+   {
+    "name": "\"we're in the middle of dinner, can we not discuss this?\"",
+    "files": [
+     "argument/653473_0.ogg",
+     "argument/653473_1.ogg",
+     "argument/653473_2.ogg",
+     "argument/653473_3.ogg",
+     "argument/653473_4.ogg",
+     "argument/653473_5.ogg"
+    ],
+    "rate": 2,
+    "gain": [
+     0.4,
+     0.7
+    ]
+   },
+   {
+    "name": "Angry frustrated and disappointed - Male - Various",
+    "files": [
+     "argument/527737_0.ogg",
+     "argument/527737_1.ogg",
+     "argument/527737_2.ogg",
+     "argument/527737_3.ogg",
+     "argument/527737_4.ogg",
+     "argument/527737_5.ogg",
+     "argument/527737_6.ogg",
+     "argument/527737_7.ogg"
+    ],
+    "rate": 2.5,
+    "gain": [
+     0.4,
+     0.7
+    ]
+   },
+   {
+    "name": "51-Voz_Enojada-glued (angry man talking)",
+    "files": [
+     "argument/491831_0.ogg"
+    ],
+    "rate": 1.5,
+    "gain": [
+     0.4,
+     0.7
+    ]
+   },
+   {
+    "name": "UGHHH!! I hate you",
+    "files": [
+     "argument/595815_0.ogg",
+     "argument/595815_1.ogg",
+     "argument/595815_2.ogg"
+    ],
+    "rate": 1.5,
+    "gain": [
+     0.4,
+     0.6
+    ]
+   },
+   {
+    "name": "Mad Husband (gibberish)",
+    "files": [
+     "argument/613987_0.ogg"
+    ],
+    "rate": 1.5,
+    "gain": [
+     0.4,
+     0.7
+    ]
+   },
+   {
+    "name": "thats enough turn the lights off",
+    "files": [
+     "argument/873701_0.ogg",
+     "argument/873701_1.ogg",
+     "argument/873701_2.ogg"
+    ],
+    "rate": 1,
+    "gain": [
+     0.4,
+     0.6
+    ]
+   },
+   {
+    "name": "AS000834_indignation (female, wordless)",
+    "files": [
+     "argument/559642_0.ogg",
+     "argument/559642_1.ogg",
+     "argument/559642_2.ogg",
+     "argument/559642_3.ogg"
+    ],
+    "rate": 1,
+    "gain": [
+     0.3,
+     0.5
+    ]
+   },
+   {
+    "name": "Door Slammed",
+    "files": [
+     "argument/174643_0.ogg",
+     "argument/174643_1.ogg",
+     "argument/174643_2.ogg",
+     "argument/174643_3.ogg"
+    ],
+    "rate": 1.5,
+    "gain": [
+     0.4,
+     0.7
+    ]
+   },
+   {
+    "name": "crash (angry fit, audioplay)",
+    "files": [
+     "argument/40158_0.ogg"
+    ],
+    "rate": 1,
+    "gain": [
+     0.3,
+     0.5
+    ]
+   },
+   {
+    "name": "pottery-dish-smash-4x-samples",
+    "files": [
+     "argument/186363_0.ogg",
+     "argument/186363_1.ogg",
+     "argument/186363_2.ogg",
+     "argument/186363_3.ogg"
+    ],
+    "rate": 1,
+    "gain": [
+     0.3,
+     0.6
+    ]
+   },
+   {
+    "name": "falling pots and pans",
+    "files": [
+     "argument/133486_0.ogg",
+     "argument/133486_1.ogg",
+     "argument/133486_2.ogg",
+     "argument/133486_3.ogg",
+     "argument/133486_4.ogg",
+     "argument/133486_5.ogg"
+    ],
+    "rate": 1.5,
+    "gain": [
+     0.3,
+     0.6
+    ]
+   },
+   {
+    "name": "Kitchen Ransack (drawers slammed)",
+    "files": [
+     "argument/320610_0.ogg",
+     "argument/320610_1.ogg",
+     "argument/320610_2.ogg",
+     "argument/320610_3.ogg",
+     "argument/320610_4.ogg",
+     "argument/320610_5.ogg"
+    ],
+    "rate": 2,
+    "gain": [
+     0.3,
+     0.5
+    ]
+   },
+   {
+    "name": "packing (suitcase, fast and angry)",
+    "files": [
+     "argument/37801_0.ogg",
+     "argument/37801_1.ogg",
+     "argument/37801_2.ogg",
+     "argument/37801_3.ogg"
+    ],
+    "rate": 1,
+    "gain": [
+     0.2,
+     0.35
+    ]
+   }
+  ]
  }
 }

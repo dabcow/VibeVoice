@@ -112,3 +112,43 @@ Thank you to every recordist below.
 | edit | Trailer Super Hits | gerainsan | https://freesound.org/s/382689/ |
 | edit | Riser sound effect short | syntheffects | https://freesound.org/s/685256/ |
 | edit | Dark Piano Tension | Werra | https://freesound.org/s/231562/ |
+| footsteps | G17-30 Pedestrian Footsteps on Pavement | craigsmith | https://freesound.org/s/438176/ |
+| footsteps | metro subway medium crowd busy footsteps echo, Montreal | kyles | https://freesound.org/s/455812/ |
+| footsteps | Footsteps_Hallway (clicking heels) | georgisound | https://freesound.org/s/368834/ |
+| footsteps | Footsteps in Factory Hall on Wood and Concrete | RutgerMuller | https://freesound.org/s/155858/ |
+| footsteps | Footsteps Dirt Gravel | PotatokingXII | https://freesound.org/s/352870/ |
+| footsteps | walk and run up stairs | itinerantmonk108 | https://freesound.org/s/553902/ |
+| footsteps | Footsteps, Tile, Male Tennis Shoes, Fast Pace | SpliceSound | https://freesound.org/s/170501/ |
+| footsteps | running (down a wooden hall) | moxobna | https://freesound.org/s/32939/ |
+| footsteps | running sounds | zombiechaser3 | https://freesound.org/s/134991/ |
+| footsteps | FastRunning | Topschool | https://freesound.org/s/361072/ |
+| shooter | Atmosphere_Scifi_Bunker_Loop_Stereo | Nox_Sound | https://freesound.org/s/817225/ |
+| shooter | Tension Ambience | neilraouf | https://freesound.org/s/617518/ |
+| shooter | M4 Assault rifle firing | mnslugger20 | https://freesound.org/s/259758/ |
+| shooter | AK47 and various other gunshots at indoor shooting range | acidsnowflake | https://freesound.org/s/402791/ |
+| shooter | M16 burst in street | Franki-01234 | https://freesound.org/s/201668/ |
+| shooter | 9mm pistol shot | michorvath | https://freesound.org/s/427592/ |
+| shooter | Timebombbeep | scarbelly25 | https://freesound.org/s/33942/ |
+| shooter | Bomb Countdown Beeps | snakebarney | https://freesound.org/s/138108/ |
+| shooter | Explosion, Medium Blast | Kinoton | https://freesound.org/s/516914/ |
+| shooter | Explosion | qubodup | https://freesound.org/s/182429/ |
+| shooter | Metal Footsteps (metal grate) | SoftDistortionFX | https://freesound.org/s/398937/ |
+| shooter | Assault Rifle Reload | Kodack | https://freesound.org/s/256912/ |
+| shooter | Pistol Manipulation 01 | GreenFireSound | https://freesound.org/s/348155/ |
+| shooter | Sci Fi Wooshes_variations | Alex_hears_things | https://freesound.org/s/400908/ |
+| shooter | Fast Warp In | GammaGool | https://freesound.org/s/735062/ |
+| argument | Quarreling old couple (synth imitation) | Schulze | https://freesound.org/s/23226/ |
+| argument | Exp_Upset Crowd Talking_Loop_03 | mglennsound | https://freesound.org/s/725706/ |
+| argument | "we're in the middle of dinner, can we not discuss this?" | buggly | https://freesound.org/s/653473/ |
+| argument | Angry frustrated and disappointed - Male - Various | khenshom | https://freesound.org/s/527737/ |
+| argument | 51-Voz_Enojada-glued (angry man talking) | HidroLion | https://freesound.org/s/491831/ |
+| argument | UGHHH!! I hate you | vibritherabjit123 | https://freesound.org/s/595815/ |
+| argument | Mad Husband (gibberish) | vikuserro | https://freesound.org/s/613987/ |
+| argument | thats enough turn the lights off | riippumattog | https://freesound.org/s/873701/ |
+| argument | AS000834_indignation (female, wordless) | SuddenDice | https://freesound.org/s/559642/ |
+| argument | Door Slammed | altfuture | https://freesound.org/s/174643/ |
+| argument | crash (angry fit, audioplay) | moxobna | https://freesound.org/s/40158/ |
+| argument | pottery-dish-smash-4x-samples | ragamuffin | https://freesound.org/s/186363/ |
+| argument | falling pots and pans | reg7783 | https://freesound.org/s/133486/ |
+| argument | Kitchen Ransack (drawers slammed) | petersrin | https://freesound.org/s/320610/ |
+| argument | packing (suitcase, fast and angry) | moxobna | https://freesound.org/s/37801/ |

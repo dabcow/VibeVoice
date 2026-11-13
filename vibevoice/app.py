@@ -13,7 +13,7 @@ from . import ambience
 from . import engine as eng
 from . import sharecode
 from .hotkeys import MOD_ALT, MOD_CONTROL, GlobalHotkeys
-from .profiles import BUILTIN, DEFAULTS, PARAMS
+from .profiles import BUILTIN, CURVE_SHAPES, DEFAULTS, PARAMS, merge_profiles
 
 APP = "VibeVoice"
 CFG_DIR = os.path.join(os.environ.get("APPDATA", os.path.expanduser("~")), APP)
@@ -119,6 +119,8 @@ class VibeVoiceApp:
         self.profiles = []
         self.current = None  # index into self.profiles
         self.work = dict(DEFAULTS)  # live params (edits on top of the profile)
+        self.multi = bool(self.cfg.get("multi", False))  # Select multiple: stack ticked voices
+        self.mix = list(self.cfg.get("mix", []))  # names of the ticked voices, in tick order
         self.cards = []
         self.sliders = {}
         self._suspend_sliders = False
@@ -172,6 +174,7 @@ class VibeVoiceApp:
             "voice_intensity": self.intensity_var.get(),
             "layers": self.layer_state, "layers_master": self.layer_master.get(),
             "layers_paused": not self.t_layers.on,
+            "multi": self.multi, "mix": self.mix,
         })
         try:
             os.makedirs(CFG_DIR, exist_ok=True)
@@ -222,7 +225,9 @@ class VibeVoiceApp:
         self.t_voice = Toggle(right, "VOICE ON", "VOICE OFF", self._on_voice_toggle, on=True)
         self.t_mon = Toggle(right, "HEARING MYSELF", "HEAR MYSELF", self._on_monitor, color="#0ea5e9")
         self.t_mute = Toggle(right, "MUTED", "MUTE", self._on_mute, color=BAD)
-        for t in (self.t_mute, self.t_mon, self.t_voice):
+        self.t_multi = Toggle(right, "MULTIPLE ON", "SELECT MULTIPLE", self._on_multi,
+                              on=self.multi, color="#8b5cf6")
+        for t in (self.t_mute, self.t_mon, self.t_voice, self.t_multi):
             t.pack(side="right", padx=4)
         meters = tk.Frame(right, bg=PANEL)
         meters.pack(side="right", padx=(0, 14))
@@ -385,8 +390,9 @@ class VibeVoiceApp:
             "Voice intensity scales every voice: 0% is your normal voice, 100% the voice as "
             "designed, 150% exaggerated.\n"
             "Noise gate: raise it if background noise leaks through; -80 turns it off.\n"
-            "Hotkeys (work everywhere): Ctrl+Alt+1-9 voices, Ctrl+Alt+0 voice on/off, "
-            "Ctrl+Alt+M mute.")
+            "Select multiple (top bar): tick several voices to stack them into one.\n"
+            "Hotkeys (work everywhere): Ctrl+Alt+1-9 voices (tick / untick in Select "
+            "multiple), Ctrl+Alt+0 voice on/off, Ctrl+Alt+M mute.")
         self._label(f, help_text, 9, fg=MUTED, bg=CARD, justify="left", anchor="w",
                     wraplength=520).grid(row=r, column=0, columnspan=2, sticky="w", pady=(14, 6))
         flat_button(f, "Open VB-CABLE download page", lambda: webbrowser.open(VBCABLE_URL),
@@ -406,16 +412,21 @@ class VibeVoiceApp:
             card.grid(row=i // 3, column=i % 3, sticky="nsew", padx=4, pady=4)
             tk.Frame(card, bg=p["color"], width=6).pack(side="left", fill="y")
             txt = tk.Frame(card, bg=CARD, padx=10, pady=10)
-            txt.pack(side="left", fill="both", expand=True)
+            txt.pack(side="left", fill="both", expand=True, padx=(0, 16))  # room for the tick box
             name = self._label(txt, p["name"], 10, True, bg=CARD, anchor="w")
             name.pack(fill="x")
             hint = ("Ctrl+Alt+%d" % (i + 1)) if i < 9 else ("custom" if not p.get("builtin") else "")
             sub = self._label(txt, hint, 8, fg=MUTED, bg=CARD, anchor="w")
             sub.pack(fill="x")
-            for w in (card, txt, name, sub):
-                w.bind("<Button-1>", lambda e, k=i: self._select(k))
+            chk = tk.Label(card, text="\u2610", font=(FONT, 13), bg=CARD, fg=MUTED, cursor="hand2")
+            for w in (card, txt, name, sub, chk):
+                w.bind("<Button-1>", lambda e, k=i: self._card_click(k))
             card._parts = (txt, name, sub)
+            card._chk = chk
             self.cards.append(card)
+        names = {p["name"] for p in self.profiles}
+        self.mix = [n for n in self.mix if n in names]  # deleted / renamed voices drop out
+        self._repaint_cards()
         if sel_name is not None:
             self.current = None
             self._select(self._profile_index(sel_name))
@@ -426,27 +437,72 @@ class VibeVoiceApp:
     def _select(self, i):
         if not 0 <= i < len(self.profiles):
             return
-        if self.current is not None and self.current < len(self.cards):
-            self._paint_card(self.current, False)
         self.current = i
-        self._paint_card(i, True)
         self.work = dict(DEFAULTS)
         self.work.update(self.profiles[i]["params"])
+        self._repaint_cards()
         self._load_sliders()
         self._update_title()
-        self.engine.set_params(self.work)
+        self._push_params()
 
-    def _paint_card(self, i, selected):
-        card = self.cards[i]
-        bg = CARD_HI if selected else CARD
-        card.configure(bg=bg, highlightbackground=ACCENT if selected else CARD)
-        for w in card._parts:
-            w.configure(bg=bg)
+    # ---- Select multiple: tick several voices and they play stacked as one ----------
+    def _card_click(self, i):
+        if not self.multi:
+            self._select(i)
+            return
+        name = self.profiles[i]["name"]
+        if name in self.mix:
+            self.mix.remove(name)
+        else:
+            self.mix.append(name)
+        self._select(i)  # Customize edits the voice you clicked last
+
+    def _on_multi(self, on):
+        self.multi = on
+        if on and not self.mix and self.current is not None:
+            self.mix = [self.profiles[self.current]["name"]]
+        self._repaint_cards()
+        self._update_title()
+        self._push_params()
+
+    def _active_params(self):
+        """What the engine plays: the selected voice, or the ticked voices stacked."""
+        if not self.multi:
+            return self.work
+        editing = self.profiles[self.current]["name"] if self.current is not None else None
+        return merge_profiles([self.work if n == editing else
+                               self.profiles[self._profile_index(n)]["params"] for n in self.mix])
+
+    def _push_params(self):
+        self.engine.set_params(self._active_params())
+
+    def _repaint_cards(self):
+        ticked = set(self.mix) if self.multi else set()
+        for i, card in enumerate(self.cards):
+            on = self.profiles[i]["name"] in ticked
+            selected = on if self.multi else i == self.current
+            bg = CARD_HI if selected else CARD
+            # in multi mode a grey outline marks the voice Customize is editing
+            edge = ACCENT if selected else (MUTED if self.multi and i == self.current else CARD)
+            card.configure(bg=bg, highlightbackground=edge)
+            for w in card._parts:
+                w.configure(bg=bg)
+            if self.multi:
+                card._chk.configure(text="\u2611" if on else "\u2610",
+                                    fg=ACCENT if on else MUTED, bg=bg)
+                card._chk.place(relx=1.0, x=-6, y=3, anchor="ne")
+            else:
+                card._chk.place_forget()
 
     def _update_title(self):
         p = self.profiles[self.current]
         modified = any(abs(self.work[k] - p["params"].get(k, DEFAULTS[k])) > 1e-9 for k in DEFAULTS)
-        self.edit_title.configure(text=p["name"] + ("  • modified" if modified else ""))
+        text = p["name"] + ("  • modified" if modified else "")
+        if self.multi:
+            n = len(self.mix)
+            text += (f"   ({'in' if p['name'] in self.mix else 'not in'} the mix of "
+                     f"{n} voice{'' if n == 1 else 's'})")
+        self.edit_title.configure(text=text)
 
     def _load_sliders(self):
         self._suspend_sliders = True
@@ -469,6 +525,12 @@ class VibeVoiceApp:
             return f"{v:.1f} s"
         if key == "orbit_mono":
             return "on (Discord, games)" if v >= 0.5 else "off (headphones)"
+        if key == "curve_depth":
+            return "off" if abs(v) < 0.01 else f"{v:+.1f} st"
+        if key == "curve_time":
+            return f"{v:.1f} s"
+        if key == "curve_shape":
+            return CURVE_SHAPES[min(len(CURVE_SHAPES) - 1, max(0, int(round(v))))]
         s = f"{v:+.1f}" if unit in ("st", "dB") else (f"{v:.0f}" if res >= 1 else f"{v:.2f}")
         return f"{s} {unit}".strip()
 
@@ -478,14 +540,15 @@ class VibeVoiceApp:
         var, val, unit, res = self.sliders[key]
         self.work[key] = round(var.get(), 4)
         val.configure(text=self._fmt(self.work[key], unit, res, key))
-        self.engine.set_params(self.work)
+        self._push_params()
         p = self.profiles[self.current]
         if not p.get("builtin"):  # custom profiles save edits automatically
             p["params"] = dict(self.work)
         self._update_title()
 
     def _save_as(self):
-        base = self.profiles[self.current]["name"]
+        stacked = self.multi and len(self.mix) > 1  # save the whole mix as one voice
+        base = "mix" if stacked else self.profiles[self.current]["name"]
         name = simpledialog.askstring(APP, "Name for the new voice:", parent=self.root,
                                       initialvalue=f"My {base}")
         if not name:
@@ -495,8 +558,11 @@ class VibeVoiceApp:
             messagebox.showerror(APP, f"A voice named “{name}” already exists.")
             return
         src = self.profiles[self.current]
-        self.custom.append({"name": name, "color": src["color"], "params": dict(self.work),
+        params = dict(self._active_params()) if stacked else dict(self.work)
+        self.custom.append({"name": name, "color": src["color"], "params": params,
                             "builtin": False, "base": src.get("base", src["name"])})
+        if stacked:
+            self.mix = [name]  # the new voice replaces the mix it was made from
         self._rebuild_profiles()
         self._select(self._profile_index(name))
         self._save_cfg()
@@ -676,6 +742,14 @@ class VibeVoiceApp:
 
     def _share_profile(self):
         p = self.profiles[self.current]
+        if self.multi and len(self.mix) > 1:  # a mix is shared as one combined voice
+            name = " + ".join(self.mix)[:28]
+            code = sharecode.encode(name, p["color"], self._active_params())
+            self._code_dialog(f"Share the mix “{name}”",
+                              "Send this code to a friend. It holds all the ticked voices "
+                              "combined into one voice. They can click Import code in "
+                              "VibeVoice and paste it.", code)
+            return
         code = sharecode.encode(p["name"], p["color"], self.work)
         self._code_dialog(f"Share “{p['name']}”",
                           "Send this code to a friend. They can click Import code in VibeVoice "
@@ -845,7 +919,7 @@ class VibeVoiceApp:
 
     def _handle_hotkey(self, tag, arg):
         if tag == "profile":
-            self._select(arg)
+            self._card_click(arg)  # ticks / unticks in Select multiple
         elif tag == "toggle":
             self.t_voice.set(not self.t_voice.on, fire=True)
         elif tag == "mute":
@@ -878,13 +952,15 @@ class VibeVoiceApp:
                 lat += sv.N / eng.SR
             out = self.cable_var.get() if e.cable_stream is not None else "no virtual mic"
             heard = ""
-            if self.work.get("target_f0", 0) > 0:
+            if self._active_params().get("target_f0", 0) > 0:
                 heard = (f"   your pitch ~{sv.user_f0:.0f} Hz" if sv.user_f0
                          else "   learning your pitch… keep talking")
             playing = [name for lid, name, *_ in ambience.LAYERS
                        if lid in e.layer_levels and ambience.ready(lid)]
             if playing:
                 heard += "   layers: " + ", ".join(playing)
+            if self.multi:
+                heard += "   mix: " + (" + ".join(self.mix) if self.mix else "nothing ticked")
             if round(self.intensity_var.get()) != 100:
                 heard += f"   voice intensity {self.intensity_var.get():.0f}%"
             self.status.configure(

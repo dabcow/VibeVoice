@@ -697,6 +697,13 @@ class VoiceChain:
         self.rand_every = 1.0
         self.rand_st = self.rand_target = 0.0
         self.rand_clock = 0
+        # speech curve: pitch follows a curve while you keep talking, resets in silence
+        self.curve_depth = 0.0
+        self.curve_time = 3.0
+        self.curve_shape = 0
+        self.curve_t = 0.0  # seconds of speech so far
+        self.curve_quiet = 0.0  # seconds of silence so far
+        self.curve_st = 0.0
         self.base_pitch = 0.0
         self.pv = False
 
@@ -714,8 +721,13 @@ class VoiceChain:
         if self.rand_spread <= 0.01:
             self.rand_st = self.rand_target = 0.0
             self.rand_clock = 0
+        self.curve_depth = p.get("curve_depth", 0)
+        self.curve_time = max(0.1, p.get("curve_time", 3.0))
+        self.curve_shape = int(round(p.get("curve_shape", 0)))
+        if abs(self.curve_depth) <= 0.01:
+            self.curve_t = self.curve_quiet = self.curve_st = 0.0
         self.pitch.ratio = 2 ** (pitch / 12)
-        self.delay_pitch = not pv and (abs(pitch) > 0.05 or self.rand_spread > 0.01)
+        self.delay_pitch = not pv and (abs(pitch) > 0.05 or self._pitch_moves)
         self.spectral.configure(pv, pitch, formant, target, p.get("robot_mix", 0),
                                 p.get("robot_pitch", 120), p.get("breath", 0),
                                 p.get("intensity", 1.0))
@@ -727,6 +739,43 @@ class VoiceChain:
         self.gate.threshold_db = threshold_db
 
     RAND_GLIDE = 0.04  # seconds to slide to each new pitch (no clicks, still a jump)
+    CURVE_RESET = 0.5  # seconds of silence that end a stretch of speech
+    CURVE_GLIDE = 0.03  # smooths the steps shape and the reset
+
+    @property
+    def _pitch_moves(self):
+        return self.rand_spread > 0.01 or abs(self.curve_depth) > 0.01
+
+    @staticmethod
+    def curve_value(shape, u):
+        """Curve position (0..1, or back to 0 for rise & fall) at progress u in 0..1."""
+        u = min(1.0, max(0.0, u))
+        if shape == 1:
+            return u ** 2.5
+        if shape == 2:
+            return 1.0 - (1.0 - u) ** 2.5
+        if shape == 3:
+            return u * u * (3.0 - 2.0 * u)
+        if shape == 4:
+            return math.floor(u * 4.0) / 4.0
+        if shape == 5:
+            return math.sin(math.pi * u)
+        return u
+
+    def _speech_curve(self, x):
+        """Advance the curve while the mic hears speech; reset after a pause."""
+        n = len(x)
+        level_db = 10 * math.log10(float(np.dot(x, x)) / n + 1e-12)
+        # speech = clearly above the noise gate (or a fixed floor when the gate is off)
+        if level_db > max(self.gate.threshold_db, -60.0) + 6.0:
+            self.curve_quiet = 0.0
+            self.curve_t += n / self.sr
+        else:
+            self.curve_quiet += n / self.sr
+            if self.curve_quiet >= self.CURVE_RESET:
+                self.curve_t = 0.0
+        target = self.curve_depth * self.curve_value(self.curve_shape, self.curve_t / self.curve_time)
+        self.curve_st += (target - self.curve_st) * min(1.0, n / (self.CURVE_GLIDE * self.sr))
 
     def _random_pitch(self, n):
         """Pick a new random pitch offset every `rand_every` seconds and glide to it."""
@@ -736,7 +785,14 @@ class VoiceChain:
             pick = self.rand_rng.normal(0.0, self.rand_spread)
             self.rand_target = min(12.0, max(-12.0, pick))
         self.rand_st += (self.rand_target - self.rand_st) * min(1.0, n / (self.RAND_GLIDE * self.sr))
-        st = self.base_pitch + self.rand_st
+
+    def _move_pitch(self, x_in, n):
+        """Random pitch and speech curve on top of the voice's own pitch."""
+        if self.rand_spread > 0.01:
+            self._random_pitch(n)
+        if abs(self.curve_depth) > 0.01:
+            self._speech_curve(x_in)
+        st = min(24.0, max(-24.0, self.base_pitch + self.rand_st + self.curve_st))
         if self.pv:  # phase vocoder voices (Girl, Woman, ...): pitch moves, formants stay
             self.spectral.pitch_st = st
         else:
@@ -744,9 +800,10 @@ class VoiceChain:
 
     def process(self, x):
         p = self.p
+        x_in = x  # before the gate: what the mic hears (speech detection)
         x = self.gate.process(x)
-        if self.rand_spread > 0.01:
-            self._random_pitch(len(x))
+        if self._pitch_moves:
+            self._move_pitch(x_in, len(x))
         if self.delay_pitch:
             x = self.pitch.process(x)
         if self.spectral.active:
